@@ -75,7 +75,7 @@ Date: `<date>`
 LCOM Project for group GRUPO_2LEIC<m><n>_<p>.
 Group members:
 
-<first name> <family name> (<email address>)
+Diogo Pérez (up202406763@up.pt)
 <first name> <family name> (<email address>)
 <first name> <family name> (<email address>)
 <first name> <family name> (<email address>)
