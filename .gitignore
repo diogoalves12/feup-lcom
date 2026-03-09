@@ -1,0 +1,13 @@
+.DS_Store
+**/.DS_Store
+
+# Build artifacts
+*.o
+*.out
+*.dSYM/
+
+# Local binaries (lab1)
+/lab1/lab1
+/lab1/service/lab1
+/lab1/experiment/io_experiment
+/lab1/experiment/service/io_experiment
