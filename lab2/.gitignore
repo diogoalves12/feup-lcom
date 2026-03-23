@@ -1,0 +1,17 @@
+# Compiled files
+*.o
+*.a
+*.so
+*.exe
+lab2
+
+# Local debug and logs
+.gdbinit
+*.txt
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
