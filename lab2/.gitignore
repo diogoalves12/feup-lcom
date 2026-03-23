@@ -3,10 +3,12 @@
 *.a
 *.so
 *.exe
+*.d
 lab2
 
 # Local debug and logs
 .gdbinit
+.depend
 *.txt
 
 # IDE
