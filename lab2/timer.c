@@ -5,12 +5,15 @@
 
 #include "i8254.h"
 
+static int hook_id = 0;
+unsigned int timer_counter = 0;
+
 int (timer_set_frequency)(uint8_t timer, uint32_t freq) {
-  if (timer > 2) return 1;
-  if (freq == 0 || freq > TIMER_FREQ) return 1;
+  if (timer > 2) return -1;
+  if (freq == 0 || freq > TIMER_FREQ) return -1;
 
   uint8_t st;
-  if (timer_get_conf(timer, &st) != 0) return 1;
+  if (timer_get_conf(timer, &st) != 0) return -1;
 
   uint8_t preserved = st & 0x0F;
 
@@ -24,38 +27,38 @@ int (timer_set_frequency)(uint8_t timer, uint32_t freq) {
   uint16_t divider = TIMER_FREQ / freq;
 
   uint8_t lsb, msb;
-  if (util_get_LSB(divider, &lsb) != 0) return 1;
-  if (util_get_MSB(divider, &msb) != 0) return 1;
+  if (util_get_LSB(divider, &lsb) != 0) return -1;
+  if (util_get_MSB(divider, &msb) != 0) return -1;
 
   int port;
   if (timer == 0) port = TIMER_0;
   else if (timer == 1) port = TIMER_1;
   else port = TIMER_2;
 
-  if (sys_outb(TIMER_CTRL, control) != 0) return 1;
-  if (sys_outb(port, lsb) != 0) return 1;
-  if (sys_outb(port, msb) != 0) return 1;
+  if (sys_outb(TIMER_CTRL, control) != 0) return -1;
+  if (sys_outb(port, lsb) != 0) return -1;
+  if (sys_outb(port, msb) != 0) return -1;
 
   return 0;
 }
 
 int (timer_subscribe_int)(uint8_t *bit_no) {
-    /* To be implemented by the students */
-  printf("%s is not yet implemented!\n", __func__);
+  if (bit_no == NULL) return -1;
 
-  return 1;
+  *bit_no = hook_id;
+
+  if (sys_irqsetpolicy(TIMER0_IRQ, IRQ_REENABLE, &hook_id) != 0) return -1;
+
+  return 0;
 }
 
 int (timer_unsubscribe_int)() {
-  /* To be implemented by the students */
-  printf("%s is not yet implemented!\n", __func__);
-
-  return 1;
+  if (sys_irqrmpolicy(&hook_id) != 0) return -1;
+  return 0;
 }
 
 void (timer_int_handler)() {
-  /* To be implemented by the students */
-  printf("%s is not yet implemented!\n", __func__);
+  timer_counter++;
 }
 
 int (timer_get_conf)(uint8_t timer, uint8_t *st) {
