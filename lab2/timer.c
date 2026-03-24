@@ -6,7 +6,15 @@
 #include "i8254.h"
 
 static int hook_id = 0;
-unsigned int timer_counter = 0;
+static uint32_t timer_counter = 0;
+
+uint32_t (timer_get_counter)() {
+  return timer_counter;
+}
+
+void (timer_reset_counter)() {
+  timer_counter = 0;
+}
 
 int (timer_set_frequency)(uint8_t timer, uint32_t freq) {
   if (timer > 2) return -1;
