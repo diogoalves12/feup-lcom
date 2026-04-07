@@ -1,0 +1,20 @@
+Compiled files
+*.o
+*.a
+*.so
+*.exe
+*.d
+*.pico
+lab3
+
+Local debug and logs
+.gdbinit
+.depend
+*.txt
+
+IDE
+.vscode/
+.idea/
+
+OS
+.DS_Store
