@@ -76,6 +76,6 @@ LCOM Project for group GRUPO_2LEIC<m><n>_<p>.
 Group members:
 
 Diogo Pérez (up202406763@up.pt)
-<first name> <family name> (<email address>)
+Diogo Alves (up202307104@up.pt)
 <first name> <family name> (<email address>)
 <first name> <family name> (<email address>)
