@@ -77,5 +77,4 @@ Group members:
 
 Diogo Pérez (up202406763@up.pt)
 Diogo Alves (up202307104@up.pt)
-<first name> <family name> (<email address>)
-<first name> <family name> (<email address>)
+Gonçalo Paiva (up202309927@up.pt)
