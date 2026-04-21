@@ -72,7 +72,7 @@ Date: `<date>`
 
 ## Authors and acknowledgment
 
-LCOM Project for group GRUPO_2LEIC<m><n>_<p>.
+LCOM Project for group GRUPO_2LEIC<0><7>_<4>.
 Group members:
 
 Diogo Pérez (up202406763@up.pt)
