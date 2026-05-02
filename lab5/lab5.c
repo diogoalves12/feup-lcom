@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -12,6 +13,8 @@
 #include "../lab3/i8042.h"
 #include "../lab3/kbc.h"
 #include "video.h"
+
+#define XPM_MODE 0x105
 
 static int (video_wait_for_esc)() {
     uint8_t bit_no;
@@ -43,6 +46,26 @@ static int (video_wait_for_esc)() {
     if (kbc_unsubscribe_int() != 0)
         return 1;
 
+    return 0;
+}
+
+static int (video_draw_xpm)(xpm_map_t xpm, uint16_t x, uint16_t y) {
+    xpm_image_t img;
+    uint8_t *pixmap = xpm_load(xpm, XPM_INDEXED, &img);
+    if (pixmap == NULL)
+        return 1;
+
+    for (uint16_t row = 0; row < img.height; row++) {
+        for (uint16_t col = 0; col < img.width; col++) {
+            uint32_t color = pixmap[row * img.width + col];
+            if (vg_draw_pixel(x + col, y + row, color) != 0) {
+                free(pixmap);
+                return 1;
+            }
+        }
+    }
+
+    free(pixmap);
     return 0;
 }
 
@@ -103,8 +126,20 @@ int(video_test_rectangle)(uint16_t mode, uint16_t x, uint16_t y,
 }
 
 int(video_test_xpm)(xpm_map_t xpm, uint16_t x, uint16_t y) {
-    /* To be completed */
-    printf("%s(%8p, %u, %u): under construction\n", __func__, xpm, x, y);
+    if (video_map_vram(XPM_MODE) != 0)
+        return 1;
 
-    return 1;
+    if (video_set_mode(XPM_MODE) != 0)
+        return 1;
+
+    if (video_draw_xpm(xpm, x, y) != 0)
+        return 1;
+
+    if (video_wait_for_esc() != 0)
+        return 1;
+
+    if (vg_exit() != 0)
+        return 1;
+
+    return 0;
 }
