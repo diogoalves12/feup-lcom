@@ -1,9 +1,10 @@
 #include <lcom/lcf.h>
 #include "i8042.h"
+#include "keyboard.h"
 
-int hook_id_kbd = 1;      
-uint8_t scancode = 0;     
-bool error_found = false; 
+static int hook_id_kbd = 1;
+static uint8_t scancode = 0;
+static bool error_found = false;
 
 int (keyboard_subscribe_int)(uint8_t *bit_no) {
   *bit_no = hook_id_kbd;
@@ -50,4 +51,12 @@ int (keyboard_poll)(uint8_t *codigo) {
         }
         tickdelay(micros_to_ticks(DELAY_US));
     }
+}
+
+uint8_t (keyboard_get_scancode)() {
+  return scancode;
+}
+
+bool (keyboard_has_error)() {
+  return error_found;
 }

@@ -9,23 +9,29 @@ SRCS = lab5.c
 CFLAGS += -pedantic -I../lab2
 
 # list of library dependencies
-DPADD += ${LIBLCF} ${LIB_NAME} ../lab3/libkbc.a ../lab2/libtimer.a
-LDADD += -llcf -L. -lvideo -L../lab3 -lkbc -L../lab2 -ltimer
+DPADD += ${LIBLCF} ${LIB_NAME} ../lab3/libkbd.a ../lab2/libtimer.a
+LDADD += -llcf -L. -lvideo -L../lab3 -lkbd -L../lab2 -ltimer
 
 LIB_NAME = libvideo.a
 LIB_SRCS = video.c
 LIB_OBJS = ${LIB_SRCS:.c=.o}
-CLEANFILES += ${LIB_NAME} ${LIB_OBJS}
+CLEANFILES += ${LIB_NAME} ${LIB_OBJS} trace.txt output.txt
 
 timer_lib:
 	cd ../lab2 && ${MAKE} lib
 
-kbc_lib:
+kbd_lib:
 	cd ../lab3 && ${MAKE} lib
 
-all: timer_lib kbc_lib lib
+all: timer_lib kbd_lib lib
 lib: ${LIB_OBJS}
 	ar rcs ${LIB_NAME} ${LIB_OBJS}
+
+clean_deps:
+	cd ../lab2 && ${MAKE} clean
+	cd ../lab3 && ${MAKE} clean
+
+clean: clean_deps
 
 # include LCOM's makefile that does all the "heavy lifting"
 .include <minix.lcom.mk>

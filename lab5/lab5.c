@@ -11,14 +11,14 @@
 
 // Any header files included below this line should have been created by you
 #include "../lab3/i8042.h"
-#include "../lab3/kbc.h"
+#include "../lab3/keyboard.h"
 #include "video.h"
 
 #define XPM_MODE 0x105
 
 static int (video_wait_for_esc)() {
     uint8_t bit_no;
-    if (kbc_subscribe_int(&bit_no) != 0)
+    if (keyboard_subscribe_int(&bit_no) != 0)
         return 1;
 
     uint32_t irq_set = BIT(bit_no);
@@ -37,13 +37,13 @@ static int (video_wait_for_esc)() {
             if (msg.m_notify.interrupts & irq_set) {
                 kbc_ih();
 
-                if (!kbc_get_error() && kbc_get_byte() == ESC_BREAKCODE)
+                if (!keyboard_has_error() && keyboard_get_scancode() == ESC_BREAKCODE)
                     done = true;
             }
         }
     }
 
-    if (kbc_unsubscribe_int() != 0)
+    if (keyboard_unsubscribe_int() != 0)
         return 1;
 
     return 0;
@@ -107,6 +107,8 @@ int(video_test_init)(uint16_t mode, uint8_t delay) {
 
 int(video_test_rectangle)(uint16_t mode, uint16_t x, uint16_t y,
                           uint16_t width, uint16_t height, uint32_t color) {
+    int rc = 1;
+
     if (video_map_vram(mode) != 0)
         return 1;
 
@@ -114,18 +116,23 @@ int(video_test_rectangle)(uint16_t mode, uint16_t x, uint16_t y,
         return 1;
 
     if (vg_draw_rectangle(x, y, width, height, color) != 0)
-        return 1;
+        goto cleanup;
 
     if (video_wait_for_esc() != 0)
-        return 1;
+        goto cleanup;
 
+    rc = 0;
+
+cleanup:
     if (vg_exit() != 0)
         return 1;
 
-    return 0;
+    return rc;
 }
 
 int(video_test_xpm)(xpm_map_t xpm, uint16_t x, uint16_t y) {
+    int rc = 1;
+
     if (video_map_vram(XPM_MODE) != 0)
         return 1;
 
@@ -133,13 +140,16 @@ int(video_test_xpm)(xpm_map_t xpm, uint16_t x, uint16_t y) {
         return 1;
 
     if (video_draw_xpm(xpm, x, y) != 0)
-        return 1;
+        goto cleanup;
 
     if (video_wait_for_esc() != 0)
-        return 1;
+        goto cleanup;
 
+    rc = 0;
+
+cleanup:
     if (vg_exit() != 0)
         return 1;
 
-    return 0;
+    return rc;
 }

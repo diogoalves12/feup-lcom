@@ -4,15 +4,12 @@
 #include <stdint.h>
 #include <lcom/timer.h>
 #include "i8042.h"
+#include "keyboard.h"
 
-extern uint8_t scancode;
-extern bool error_found;
 extern int sys_inb_counter;
-int keyboard_subscribe_int(uint8_t *bit_no);
-int keyboard_unsubscribe_int();
-void (kbc_ih)();
-int (keyboard_poll)(uint8_t *codigo);
-extern int timer_counter;
+
+uint32_t (timer_get_counter)();
+void (timer_reset_counter)();
 
 int main(int argc, char *argv[]) {
   // sets the language of LCF messages (can be either EN-US or PT-PT)
@@ -49,7 +46,7 @@ int(kbd_test_scan)() {
   uint8_t bytes[2];
   uint8_t size = 0;
 
-  while (scancode != ESC_BREAKCODE) {
+  while (keyboard_get_scancode() != ESC_BREAKCODE) {
     if (driver_receive(ANY, &msg, &ipc_status) != 0) continue;
 
     if (is_ipc_notify(ipc_status)) {
@@ -58,16 +55,16 @@ int(kbd_test_scan)() {
           if (msg.m_notify.interrupts & irq_set) {
             
             kbc_ih(); 
-            if (error_found) continue;
+            if (keyboard_has_error()) continue;
 
-            bytes[size] = scancode;
+            bytes[size] = keyboard_get_scancode();
             size++;
 
-            if (scancode == TWO_BYTE_CODE) {
+            if (keyboard_get_scancode() == TWO_BYTE_CODE) {
                 continue; 
             }
 
-            bool make = !(scancode & BIT(7));
+            bool make = !(keyboard_get_scancode() & BIT(7));
             kbd_print_scancode(make, size, bytes);
             
             size = 0; 
@@ -137,9 +134,9 @@ int(kbd_test_timed_scan)(uint8_t n) {
   uint8_t size = 0;
   
   int seconds = 0;
-  timer_counter = 0;
+  timer_reset_counter();
 
-  while (scancode != ESC_BREAKCODE && seconds < n) {
+  while (keyboard_get_scancode() != ESC_BREAKCODE && seconds < n) {
     if (driver_receive(ANY, &msg, &ipc_status) != 0) continue;
 
     if (is_ipc_notify(ipc_status)) {
@@ -148,25 +145,25 @@ int(kbd_test_timed_scan)(uint8_t n) {
           
           if (msg.m_notify.interrupts & kbd_irq_set) {
             kbc_ih(); 
-            if (error_found) continue;
+            if (keyboard_has_error()) continue;
 
-            bytes[size] = scancode;
+            bytes[size] = keyboard_get_scancode();
             size++;
 
-            if (scancode == TWO_BYTE_CODE) continue; 
+            if (keyboard_get_scancode() == TWO_BYTE_CODE) continue; 
 
-            bool make = !(scancode & BIT(7));
+            bool make = !(keyboard_get_scancode() & BIT(7));
             kbd_print_scancode(make, size, bytes);
             size = 0; 
 
-            timer_counter = 0;
+            timer_reset_counter();
             seconds = 0;
           }
 
           if (msg.m_notify.interrupts & timer_irq_set) {
             timer_int_handler();
             
-            if (timer_counter % 60 == 0) {
+            if (timer_get_counter() % 60 == 0) {
               seconds++;
             }
           }
