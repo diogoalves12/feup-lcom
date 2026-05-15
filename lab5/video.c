@@ -1,18 +1,5 @@
 // IMPORTANT: you must include the following line in all your C files
 #include <lcom/lcf.h>
-
-#if __has_include(<machine/int86.h>)
-#include <machine/int86.h>
-#elif __has_include("../.minix-src/include/machine/int86.h")
-#include "../.minix-src/include/machine/int86.h"
-#endif
-
-#if __has_include(<sys/errno.h>)
-#include <sys/errno.h>
-#elif __has_include("../.minix-src/include/sys/errno.h")
-#include "../.minix-src/include/sys/errno.h"
-#endif
-
 #include <stdio.h>
 #include <stdint.h>
 #include <sys/mman.h>
