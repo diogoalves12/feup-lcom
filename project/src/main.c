@@ -1,7 +1,8 @@
 #include <lcom/lcf.h>
+#include <minix/sysutil.h>
 #include <stdio.h>
 
-#include "video.h"
+#include "renderer.h"
 
 #define PROJECT_TEST_VIDEO_MODE 0x115
 
@@ -26,17 +27,38 @@ int(proj_main_loop)(int argc, char *argv[]) {
 
   printf("LCOM project started.\n");
 
-  if (video_map_vram(PROJECT_TEST_VIDEO_MODE) != 0) {
-    printf("Failed to map VRAM for mode 0x%03X.\n", PROJECT_TEST_VIDEO_MODE);
+  if (renderer_init(PROJECT_TEST_VIDEO_MODE) != 0) {
+    printf("Failed to initialize renderer for mode 0x%03X.\n", PROJECT_TEST_VIDEO_MODE);
     return 1;
   }
 
-  if (video_set_mode(PROJECT_TEST_VIDEO_MODE) != 0) {
-    printf("Failed to enter graphics mode 0x%03X.\n", PROJECT_TEST_VIDEO_MODE);
+  if (renderer_clear(0x101010) != 0) {
+    printf("Failed to clear the test background.\n");
+    renderer_shutdown();
     return 1;
   }
 
-  if (vg_exit() != 0) {
+  if (renderer_draw_rectangle(80, 60, 220, 140, 0x0033CC) != 0) {
+    printf("Failed to draw the first test rectangle.\n");
+    renderer_shutdown();
+    return 1;
+  }
+
+  if (renderer_draw_rectangle(420, 240, 320, 180, 0xCC5500) != 0) {
+    printf("Failed to draw the second test rectangle.\n");
+    renderer_shutdown();
+    return 1;
+  }
+
+  if (renderer_draw_rectangle(180, 500, 500, 80, 0x33AA33) != 0) {
+    printf("Failed to draw the third test rectangle.\n");
+    renderer_shutdown();
+    return 1;
+  }
+
+  tickdelay(micros_to_ticks(1000000));
+
+  if (renderer_shutdown() != 0) {
     printf("Failed to return to text mode.\n");
     return 1;
   }

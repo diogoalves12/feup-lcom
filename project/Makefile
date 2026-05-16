@@ -1,11 +1,12 @@
 PROG = proj
 
-.PATH: ${.CURDIR}/src
+.PATH: ${.CURDIR}/src ${.CURDIR}/src/graphics
 
-SRCS = main.c
+SRCS = main.c renderer.c
 
 CFLAGS += -pedantic
 CFLAGS += -I${.CURDIR}/src
+CFLAGS += -I${.CURDIR}/src/graphics
 CFLAGS += -I../lab2
 CFLAGS += -I../lab3
 CFLAGS += -I../lab5
