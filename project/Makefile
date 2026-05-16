@@ -1,8 +1,11 @@
 PROG = proj
 
-SRCS = src/main.c
+.PATH: ${.CURDIR}/src
+
+SRCS = main.c
 
 CFLAGS += -pedantic
+CFLAGS += -I${.CURDIR}/src
 
 DPADD += ${LIBLCF}
 LDADD += -llcf
