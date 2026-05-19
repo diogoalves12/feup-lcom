@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "renderer.h"
+#include "game.h"
 
 #define PROJECT_TEST_VIDEO_MODE 0x115
 
@@ -32,38 +33,26 @@ int(proj_main_loop)(int argc, char *argv[]) {
     return 1;
   }
 
-  if (renderer_clear(0x101010) != 0) {
-    printf("Failed to clear the test background.\n");
-    renderer_shutdown();
-    return 1;
-  }
+  Player player = {
+    .box = {.x = 100, .y = 100, .width = 30, .height = 30},
+    .vx = 20,
+    .vy = 0,
+    .color = 0x0033CC
+  };
 
-  if (renderer_draw_rectangle(80, 60, 220, 140, 0x0033CC) != 0) {
-    printf("Failed to draw the first test rectangle.\n");
-    renderer_shutdown();
-    return 1;
-  }
+  Wall walls[1] = {
+    { .box = {.x = 115, .y = 80, .width = 40, .height = 100}, .color = 0x808080 }
+  };
 
-  if (renderer_draw_rectangle(420, 240, 320, 180, 0xCC5500) != 0) {
-    printf("Failed to draw the second test rectangle.\n");
-    renderer_shutdown();
-    return 1;
-  }
+  renderer_clear(0x101010);
+  renderer_draw_rectangle(walls[0].box.x, walls[0].box.y, walls[0].box.width, walls[0].box.height, walls[0].color);
 
-  if (renderer_draw_rectangle(180, 500, 500, 80, 0x33AA33) != 0) {
-    printf("Failed to draw the third test rectangle.\n");
-    renderer_shutdown();
-    return 1;
-  }
+  game_move_player(&player, walls, 1);
 
-  tickdelay(micros_to_ticks(1000000));
+  renderer_draw_rectangle(player.box.x, player.box.y, player.box.width, player.box.height, player.color);
 
-  if (renderer_shutdown() != 0) {
-    printf("Failed to return to text mode.\n");
-    return 1;
-  }
+  tickdelay(micros_to_ticks(5000000));
 
-  printf("Returned to text mode.\n");
-
+  renderer_shutdown();
   return 0;
 }

@@ -1,8 +1,9 @@
 PROG = proj
 
+# Adicionados physics.c e game.c à lista de ficheiros fonte
 .PATH: ${.CURDIR}/src ${.CURDIR}/src/graphics
 
-SRCS = main.c renderer.c
+SRCS = main.c renderer.c physics.c game.c
 
 CFLAGS += -pedantic
 CFLAGS += -I${.CURDIR}/src
