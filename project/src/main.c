@@ -56,6 +56,12 @@ int(proj_main_loop)(int argc, char *argv[]) {
     return 1;
   }
 
+  if (renderer_present() != 0) {
+    printf("Failed to present the hidden buffer.\n");
+    renderer_shutdown();
+    return 1;
+  }
+
   tickdelay(micros_to_ticks(1000000));
 
   if (renderer_shutdown() != 0) {
