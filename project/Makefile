@@ -1,8 +1,12 @@
 PROG = proj
 
-.PATH: ${.CURDIR}/src ${.CURDIR}/src/graphics
+.PATH: ${.CURDIR}/src
+.PATH: ${.CURDIR}/src/graphics
+.PATH: ${.CURDIR}/../lab2
+.PATH: ${.CURDIR}/../lab3
+.PATH: ${.CURDIR}/../lab5
 
-SRCS = main.c renderer.c
+SRCS = main.c renderer.c timer.c keyboard.c video.c utils.c
 
 CFLAGS += -pedantic
 CFLAGS += -I${.CURDIR}/src
@@ -11,8 +15,8 @@ CFLAGS += -I../lab2
 CFLAGS += -I../lab3
 CFLAGS += -I../lab5
 
-DPADD += ${LIBLCF} ../lab2/libtimer.a ../lab3/libkbd.a ../lab5/libvideo.a
-LDADD += -llcf -L../lab2 -ltimer -L../lab3 -lkbd -L../lab5 -lvideo
+DPADD += ${LIBLCF}
+LDADD += -llcf
 
 all: timer_lib kbd_lib video_lib
 
