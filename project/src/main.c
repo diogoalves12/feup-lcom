@@ -4,16 +4,20 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "arena.h"
 #include "i8042.h"
 #include "keyboard.h"
 #include "renderer.h"
 
 #define PROJECT_TEST_VIDEO_MODE 0x115
 #define PROJECT_BACKGROUND_COLOR 0x101010
+#define PROJECT_ARENA_SEED 12345
 
 typedef struct {
   bool running;
   uint32_t frame_counter;
+  // Stores the generated map layout for the current match.
+  Arena arena;
 } Game;
 
 static int game_init(Game *game);
@@ -71,6 +75,13 @@ static int game_init(Game *game) {
 
   if (renderer_init(PROJECT_TEST_VIDEO_MODE) != 0) {
     printf("Failed to initialize renderer for mode 0x%03X.\n", PROJECT_TEST_VIDEO_MODE);
+    return 1;
+  }
+
+  // The seed is fixed for now, but later it can come from RTC or menu settings.
+  if (arena_init(&game->arena, DEFAULT_ARENA_DIFFICULTY, PROJECT_ARENA_SEED) != 0) {
+    printf("Failed to initialize arena.\n");
+    renderer_shutdown();
     return 1;
   }
 
@@ -160,21 +171,15 @@ static void game_update(Game *game) {
 }
 
 static int game_render(const Game *game) {
-  (void) game;
+  if (game == NULL) {
+    return 1;
+  }
 
   if (renderer_clear(PROJECT_BACKGROUND_COLOR) != 0) {
     return 1;
   }
 
-  if (renderer_draw_rectangle(80, 60, 220, 140, 0x0033CC) != 0) {
-    return 1;
-  }
-
-  if (renderer_draw_rectangle(420, 240, 320, 180, 0xCC5500) != 0) {
-    return 1;
-  }
-
-  if (renderer_draw_rectangle(180, 500, 500, 80, 0x33AA33) != 0) {
+  if (arena_draw(&game->arena) != 0) {
     return 1;
   }
 
