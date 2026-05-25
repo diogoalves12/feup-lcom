@@ -12,8 +12,6 @@
 
 #define PROJECT_TEST_VIDEO_MODE 0x115
 #define PROJECT_BACKGROUND_COLOR 0x101010
-#define PROJECT_ARENA_SEED 12345
-
 typedef struct {
   bool running;
   uint32_t frame_counter;
@@ -97,8 +95,7 @@ static int game_init(Game *game) {
     return 1;
   }
 
-  // The seed is fixed for now, but later it can come from RTC or menu settings.
-  if (arena_init(&game->arena, DEFAULT_ARENA_DIFFICULTY, PROJECT_ARENA_SEED) != 0) {
+  if (arena_init(&game->arena, DEFAULT_ARENA_DIFFICULTY) != 0) {
     printf("Failed to initialize arena.\n");
     renderer_shutdown();
     return 1;
