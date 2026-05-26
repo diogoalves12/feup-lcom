@@ -6,6 +6,7 @@
 #include "keyboard.h"
 #include "mouse.h"
 #include "menu.h"
+#include "renderer.h"
 
 #define MENU_OPTION_PLAY 0
 #define MENU_OPTION_EXIT 1
@@ -28,11 +29,7 @@
 #define COLOR_SELECTED  0x00AAFF
 #define COLOR_TEXT      0xFFFFFF
 
-typedef enum {
-  MENU_RUNNING,
-  MENU_START_GAME,
-  MENU_EXIT_GAME
-} MenuState;
+
 
 typedef struct {
   int x;
@@ -54,11 +51,11 @@ static bool point_inside_button(int x, int y, Button *button) {
 }
 
 static void draw_button(Button *button, uint32_t color) {
-  vg_draw_rectangle(button->x, button->y, button->w, button->h, color);
+  renderer_draw_rectangle(button->x, button->y, button->w, button->h, color);
 }
 
 static void draw_menu(void) {
-  vg_draw_rectangle(0, 0, SCREEN_W, SCREEN_H, COLOR_BG);
+  renderer_clear(COLOR_BG);
 
   if (selected_option == MENU_OPTION_PLAY) {
     draw_button(&play_button, COLOR_SELECTED);
@@ -77,16 +74,18 @@ static void draw_menu(void) {
    * Caso ainda não tenhas texto, substitui isto por sprites XPM.
    */
 
-  swap_buffers(); // se o teu video.c usar double buffering
+  renderer_present();
 }
 
 MenuState menu_update_keyboard(uint8_t scancode) {
   switch (scancode) {
     case 0x48: // seta cima
+    case 0x11: // W
       selected_option = MENU_OPTION_PLAY;
       break;
 
     case 0x50: // seta baixo
+    case 0x1F: // S
       selected_option = MENU_OPTION_EXIT;
       break;
 
@@ -124,25 +123,41 @@ MenuState menu_update_mouse(int mouse_x, int mouse_y, bool left_click) {
 MenuState menu_loop(void) {
   MenuState state = MENU_RUNNING;
 
-  while (state == MENU_RUNNING) {
-    draw_menu();
-
-    /*
-     * Aqui deves chamar o teu loop de interrupções:
-     *
-     * - teclado
-     * - rato
-     * - timer
-     *
-     * Quando receberes scancode:
-     * state = menu_update_keyboard(scancode);
-     *
-     * Quando receberes packet do rato:
-     * state = menu_update_mouse(mouse_x, mouse_y, left_click);
-     */
-
+  uint8_t keyboard_bit_no;
+  if (keyboard_subscribe_int(&keyboard_bit_no) != 0) {
+    return MENU_EXIT_GAME;
   }
 
-  return state;
+  int ipc_status;
+  message msg;
+  bool should_draw = true;
 
+  while (state == MENU_RUNNING) {
+    if (should_draw) {
+      draw_menu();
+      should_draw = false;
+    }
+
+    if (driver_receive(ANY, &msg, &ipc_status) != 0) {
+      continue;
+    }
+
+    if (is_ipc_notify(ipc_status)) {
+      if (_ENDPOINT_P(msg.m_source) == HARDWARE) {
+        if (msg.m_notify.interrupts & BIT(keyboard_bit_no)) {
+          kbc_ih();
+          if (!keyboard_has_error()) {
+            uint8_t scancode = keyboard_get_scancode();
+            if (scancode != 0) {
+              state = menu_update_keyboard(scancode);
+              should_draw = true;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  keyboard_unsubscribe_int();
+  return state;
 }
