@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "physics.h"
+#include "arena.h"
 
 typedef struct {
     BoundingBox box;
@@ -11,11 +12,6 @@ typedef struct {
     uint32_t color;
 } Player;
 
-typedef struct {
-    BoundingBox box;
-    uint32_t color;
-} Wall;
-
-void game_move_player(Player *player, const Wall *walls, uint32_t num_walls);
+void game_move_player(Player *player, const Arena *arena);
 
 #endif /* PROJECT_GAME_H */

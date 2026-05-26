@@ -12,5 +12,6 @@ typedef struct {
 } BoundingBox;
 
 bool physics_check_collision(BoundingBox a, BoundingBox b);
+bool physics_check_collision_with_tile(BoundingBox box, int row, int col);
 
 #endif /* PROJECT_PHYSICS_H */

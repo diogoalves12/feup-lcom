@@ -1,25 +1,20 @@
 PROG = proj
 
-<<<<<<< HEAD
-# Adicionados physics.c e game.c à lista de ficheiros fonte
-.PATH: ${.CURDIR}/src ${.CURDIR}/src/graphics
-
-SRCS = main.c renderer.c physics.c game.c
-=======
 .PATH: ${.CURDIR}/src
 .PATH: ${.CURDIR}/src/graphics
 .PATH: ${.CURDIR}/src/game
+.PATH: ${.CURDIR}/src/iu
 .PATH: ${.CURDIR}/../lab2
 .PATH: ${.CURDIR}/../lab3
 .PATH: ${.CURDIR}/../lab5
 
-SRCS = main.c renderer.c arena.c timer.c keyboard.c video.c utils.c
->>>>>>> origin/main
+SRCS = main.c renderer.c physics.c game.c arena.c menu.c timer.c keyboard.c video.c utils.c
 
 CFLAGS += -pedantic
 CFLAGS += -I${.CURDIR}/src
 CFLAGS += -I${.CURDIR}/src/graphics
 CFLAGS += -I${.CURDIR}/src/game
+CFLAGS += -I${.CURDIR}/src/iu
 CFLAGS += -I../lab2
 CFLAGS += -I../lab3
 CFLAGS += -I../lab5

@@ -8,11 +8,8 @@
 #include "i8042.h"
 #include "keyboard.h"
 #include "renderer.h"
-<<<<<<< HEAD
 #include "game.h"
-=======
 #include "menu.h"
->>>>>>> origin/main
 
 #define PROJECT_TEST_VIDEO_MODE 0x115
 #define PROJECT_BACKGROUND_COLOR 0x101010
@@ -23,6 +20,12 @@ typedef struct {
   uint32_t frame_counter;
   // Stores the generated map layout for the current match.
   Arena arena;
+  
+  Player player1;
+  bool key_w_pressed;
+  bool key_a_pressed;
+  bool key_s_pressed;
+  bool key_d_pressed;
 } Game;
 
 static int game_init(Game *game);
@@ -58,27 +61,6 @@ int(proj_main_loop)(int argc, char *argv[]) {
     return 1;
   }
 
-<<<<<<< HEAD
-  Player player = {
-    .box = {.x = 100, .y = 100, .width = 30, .height = 30},
-    .vx = 20,
-    .vy = 0,
-    .color = 0x0033CC
-  };
-
-  Wall walls[1] = {
-    { .box = {.x = 115, .y = 80, .width = 40, .height = 100}, .color = 0x808080 }
-  };
-
-  renderer_clear(0x101010);
-  renderer_draw_rectangle(walls[0].box.x, walls[0].box.y, walls[0].box.width, walls[0].box.height, walls[0].color);
-
-  game_move_player(&player, walls, 1);
-
-  renderer_draw_rectangle(player.box.x, player.box.y, player.box.width, player.box.height, player.color);
-
-  tickdelay(micros_to_ticks(5000000));
-=======
   MenuState menu_result = menu_loop();
 
   if (menu_result == MENU_EXIT_GAME) {
@@ -96,10 +78,10 @@ int(proj_main_loop)(int argc, char *argv[]) {
   if (menu_result == MENU_START_GAME) {
     printf("Starting game.\n");
 
-
-  if (game_loop(&game) != 0) {
-    game_shutdown(&game);
-    return 1;
+    if (game_loop(&game) != 0) {
+      game_shutdown(&game);
+      return 1;
+    }
   }
 
   if (game_shutdown(&game) != 0) {
@@ -108,7 +90,6 @@ int(proj_main_loop)(int argc, char *argv[]) {
   }
 
   printf("Returned to text mode.\n");
->>>>>>> origin/main
 
   renderer_shutdown();
   return 0;
@@ -130,6 +111,20 @@ static int game_init(Game *game) {
     renderer_shutdown();
     return 1;
   }
+
+  Position spawn = arena_get_player1_spawn(&game->arena);
+  game->player1.box.x = spawn.x;
+  game->player1.box.y = spawn.y;
+  game->player1.box.width = 16;
+  game->player1.box.height = 16;
+  game->player1.vx = 0;
+  game->player1.vy = 0;
+  game->player1.color = 0x0033CC;
+
+  game->key_w_pressed = false;
+  game->key_a_pressed = false;
+  game->key_s_pressed = false;
+  game->key_d_pressed = false;
 
   game->running = true;
   game->frame_counter = 0;
@@ -189,8 +184,28 @@ static int game_loop(Game *game) {
     if (msg.m_notify.interrupts & BIT(keyboard_bit_no)) {
       kbc_ih();
 
-      if (!keyboard_has_error() && keyboard_get_scancode() == ESC_BREAKCODE) {
-        game->running = false;
+      if (!keyboard_has_error()) {
+        uint8_t scancode = keyboard_get_scancode();
+
+        if (scancode == ESC_BREAKCODE) {
+          game->running = false;
+        } else if (scancode == 0x11) { // W make
+          game->key_w_pressed = true;
+        } else if (scancode == 0x91) { // W break
+          game->key_w_pressed = false;
+        } else if (scancode == 0x1E) { // A make
+          game->key_a_pressed = true;
+        } else if (scancode == 0x9E) { // A break
+          game->key_a_pressed = false;
+        } else if (scancode == 0x1F) { // S make
+          game->key_s_pressed = true;
+        } else if (scancode == 0x9F) { // S break
+          game->key_s_pressed = false;
+        } else if (scancode == 0x20) { // D make
+          game->key_d_pressed = true;
+        } else if (scancode == 0xA0) { // D break
+          game->key_d_pressed = false;
+        }
       }
     }
   }
@@ -214,6 +229,17 @@ static void game_update(Game *game) {
   }
 
   game->frame_counter++;
+
+  int16_t speed = 5;
+  game->player1.vx = 0;
+  game->player1.vy = 0;
+
+  if (game->key_w_pressed) game->player1.vy -= speed;
+  if (game->key_s_pressed) game->player1.vy += speed;
+  if (game->key_a_pressed) game->player1.vx -= speed;
+  if (game->key_d_pressed) game->player1.vx += speed;
+
+  game_move_player(&game->player1, &game->arena);
 }
 
 static int game_render(const Game *game) {
@@ -226,6 +252,10 @@ static int game_render(const Game *game) {
   }
 
   if (arena_draw(&game->arena) != 0) {
+    return 1;
+  }
+
+  if (renderer_draw_rectangle(game->player1.box.x, game->player1.box.y, game->player1.box.width, game->player1.box.height, game->player1.color) != 0) {
     return 1;
   }
 
