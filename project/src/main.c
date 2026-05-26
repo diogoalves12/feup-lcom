@@ -8,6 +8,7 @@
 #include "i8042.h"
 #include "keyboard.h"
 #include "renderer.h"
+#include "menu.h"
 
 #define PROJECT_TEST_VIDEO_MODE 0x115
 #define PROJECT_BACKGROUND_COLOR 0x101010
@@ -52,6 +53,24 @@ int(proj_main_loop)(int argc, char *argv[]) {
   if (game_init(&game) != 0) {
     return 1;
   }
+
+  MenuState menu_result = menu_loop();
+
+  if (menu_result == MENU_EXIT_GAME) {
+    printf("Exiting from menu.\n");
+
+    if (game_shutdown(&game) != 0) {
+      printf("Failed to shut down the game cleanly.\n");
+      return 1;
+    }
+
+    printf("Returned to text mode.\n");
+    return 0;
+  }
+
+  if (menu_result == MENU_START_GAME) {
+    printf("Starting game.\n");
+
 
   if (game_loop(&game) != 0) {
     game_shutdown(&game);
