@@ -6,6 +6,7 @@
 #include "arena.h"
 #include "player.h"
 
+// Checks the player box against wall tiles.
 bool collision_player_walls(const Arena *arena, const Player *player, Position position);
 
 #endif

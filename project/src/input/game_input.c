@@ -27,6 +27,7 @@ void game_input_actions_from_keyboard(GameInputActions *actions, const KeyboardI
     return;
   }
 
+  // Keyboard controls player 1.
   actions->player1.move_forward = keyboard->move_forward;
   actions->player1.shoot = keyboard->shoot;
   actions->player1.action = keyboard->action;

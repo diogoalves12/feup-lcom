@@ -83,11 +83,8 @@ int player_draw(const Player *player) {
     return 1;
   }
 
-  if (renderer_draw_rectangle((uint16_t) x,
-                              (uint16_t) y,
-                              player->width,
-                              player->height,
-                              player->color) != 0) {
+  // Draw player rectangle.
+  if (renderer_draw_rectangle((uint16_t) x, (uint16_t) y, player->width, player->height, player->color) != 0) {
     return 1;
   }
 
@@ -100,11 +97,7 @@ int player_draw(const Player *player) {
     return 0;
   }
 
-  if (renderer_draw_rectangle((uint16_t) indicator_x,
-                              (uint16_t) indicator_y,
-                              PLAYER_DIRECTION_INDICATOR_SIZE,
-                              PLAYER_DIRECTION_INDICATOR_SIZE,
-                              PLAYER_DIRECTION_INDICATOR_COLOR) != 0) {
+  if (renderer_draw_rectangle((uint16_t) indicator_x, (uint16_t) indicator_y, PLAYER_DIRECTION_INDICATOR_SIZE, PLAYER_DIRECTION_INDICATOR_SIZE, PLAYER_DIRECTION_INDICATOR_COLOR) != 0) {
     return 1;
   }
 
@@ -136,6 +129,7 @@ Position player_get_forward_position(const Player *player, float distance) {
     return player->position;
   }
 
+  // Move in the current angle.
   int dx = (int) roundf(cosf(player->angle) * distance);
   int dy = (int) roundf(sinf(player->angle) * distance);
 

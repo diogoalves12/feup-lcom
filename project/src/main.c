@@ -206,7 +206,7 @@ static void game_update(Game *game) {
   game->frame_counter++;
 
   if (game->input_actions.player1.move_forward) {
-    Position next_position = player_get_forward_position(&game->player1, PLAYER_MOVE_SPEED);
+    const Position next_position = player_get_forward_position(&game->player1, PLAYER_MOVE_SPEED);
 
     if (!collision_player_walls(&game->arena, &game->player1, next_position)) {
       player_set_position(&game->player1, next_position);
@@ -227,6 +227,7 @@ static int game_render(const Game *game) {
     return 1;
   }
 
+  // Draw arena first, then players.
   if (arena_draw(&game->arena) != 0) {
     return 1;
   }

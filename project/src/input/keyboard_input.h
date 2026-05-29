@@ -14,4 +14,4 @@ typedef struct {
 void keyboard_input_init(KeyboardInput *input);
 void keyboard_input_update(KeyboardInput *input, uint8_t scancode);
 
-#endif /* PROJECT_INPUT_KEYBOARD_INPUT_H */
+#endif

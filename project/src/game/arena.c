@@ -5,10 +5,10 @@
 #include "arena_draw.h"
 #include "arena_layout.h"
 
-static const int player1_spawn_row = ARENA_ROWS / 2;
-static const int player1_spawn_col = 3;
-static const int player2_spawn_row = ARENA_ROWS / 2;
-static const int player2_spawn_col = ARENA_COLS - 4;
+static const int PLAYER1_SPAWN_ROW = ARENA_ROWS / 2;
+static const int PLAYER1_SPAWN_COL = 3;
+static const int PLAYER2_SPAWN_ROW = ARENA_ROWS / 2;
+static const int PLAYER2_SPAWN_COL = ARENA_COLS - 4;
 
 static bool inside_bounds(int row, int col) {
   return row >= 0 && row < ARENA_ROWS && col >= 0 && col < ARENA_COLS;
@@ -29,7 +29,6 @@ void arena_set_tile(Arena *arena, int row, int col, TileType type) {
   arena->tiles[row][col].type = type;
 }
 
-// Clears all cells to floor.
 static void clear_tiles(Arena *arena) {
   for (int row = 0; row < ARENA_ROWS; row++) {
     for (int col = 0; col < ARENA_COLS; col++) {
@@ -38,7 +37,6 @@ static void clear_tiles(Arena *arena) {
   }
 }
 
-// Adds the outer wall border.
 static void add_borders(Arena *arena) {
   for (int col = 0; col < ARENA_COLS; col++) {
     arena_set_tile(arena, 0, col, TILE_WALL);
@@ -52,11 +50,11 @@ static void add_borders(Arena *arena) {
 }
 
 static void place_spawns(Arena *arena) {
-  arena->player1_spawn = tile_center(player1_spawn_row, player1_spawn_col);
-  arena->player2_spawn = tile_center(player2_spawn_row, player2_spawn_col);
+  arena->player1_spawn = tile_center(PLAYER1_SPAWN_ROW, PLAYER1_SPAWN_COL);
+  arena->player2_spawn = tile_center(PLAYER2_SPAWN_ROW, PLAYER2_SPAWN_COL);
 
-  arena_set_tile(arena, player1_spawn_row, player1_spawn_col, TILE_PLAYER1_SPAWN);
-  arena_set_tile(arena, player2_spawn_row, player2_spawn_col, TILE_PLAYER2_SPAWN);
+  arena_set_tile(arena, PLAYER1_SPAWN_ROW, PLAYER1_SPAWN_COL, TILE_PLAYER1_SPAWN);
+  arena_set_tile(arena, PLAYER2_SPAWN_ROW, PLAYER2_SPAWN_COL, TILE_PLAYER2_SPAWN);
 }
 
 int arena_init(Arena *arena, ArenaDifficulty difficulty) {

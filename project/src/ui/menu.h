@@ -8,4 +8,4 @@ typedef enum {
 
 MenuResult menu_loop(void);
 
-#endif /* PROJECT_UI_MENU_H */
+#endif

@@ -35,36 +35,20 @@ typedef struct {
   Position player2_spawn;
 } Arena;
 
-/**
- * Initializes the arena for the selected difficulty.
- */
 int arena_init(Arena *arena, ArenaDifficulty difficulty);
 
 void arena_set_tile(Arena *arena, int row, int col, TileType type);
 
-/**
- * Draws the arena grid.
- */
 int arena_draw(const Arena *arena);
 
-/**
- * Returns the screen-space spawn position for player 1.
- */
+// Player 1 spawn position.
 Position arena_get_player1_spawn(const Arena *arena);
 
-/**
- * Returns the screen-space spawn position for player 2.
- */
+// Player 2 spawn position.
 Position arena_get_player2_spawn(const Arena *arena);
 
-/**
- * Returns the tile type at a grid position.
- */
 TileType arena_get_tile_type(const Arena *arena, int row, int col);
 
-/**
- * Returns true when the tile is a wall.
- */
 bool arena_is_wall_tile(TileType type);
 
 #endif

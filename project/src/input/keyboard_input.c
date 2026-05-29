@@ -34,6 +34,7 @@ void keyboard_input_update(KeyboardInput *input, uint8_t scancode) {
     return;
   }
 
+  // Bit 7 marks break codes.
   pressed = (scancode & KEYBOARD_BREAK_BIT) == 0;
   makecode = scancode & KEYBOARD_MAKE_MASK;
 

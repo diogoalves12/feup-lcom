@@ -20,4 +20,4 @@ typedef struct {
 void game_input_actions_init(GameInputActions *actions);
 void game_input_actions_from_keyboard(GameInputActions *actions, const KeyboardInput *keyboard);
 
-#endif /* PROJECT_INPUT_GAME_INPUT_H */
+#endif

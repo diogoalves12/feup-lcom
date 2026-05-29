@@ -35,6 +35,8 @@ void player_set_position(Player *player, Position position);
 Position player_get_position(const Player *player);
 int player_draw(const Player *player);
 void player_rotate(Player *player, float delta_angle);
+
+// Position after moving forward.
 Position player_get_forward_position(const Player *player, float distance);
 void player_move_forward(Player *player, float distance);
 

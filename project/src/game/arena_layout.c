@@ -1,6 +1,5 @@
 #include "arena_layout.h"
 
-// Places a wall rectangle.
 static void add_rect(Arena *arena, Rect rect) {
   for (int row = rect.row; row < rect.row + rect.height; row++) {
     for (int col = rect.col; col < rect.col + rect.width; col++) {
@@ -9,7 +8,6 @@ static void add_rect(Arena *arena, Rect rect) {
   }
 }
 
-// Applies the easy layout.
 static void apply_easy(Arena *arena) {
   add_rect(arena, (Rect) {5, 10, 2, 2});
   add_rect(arena, (Rect) {17, 10, 2, 2});
@@ -19,7 +17,6 @@ static void apply_easy(Arena *arena) {
   add_rect(arena, (Rect) {14, 6, 2, 2});
 }
 
-// Applies the medium layout.
 static void apply_medium(Arena *arena) {
   add_rect(arena, (Rect) {4, 8, 2, 3});
   add_rect(arena, (Rect) {17, 8, 2, 3});
@@ -33,7 +30,6 @@ static void apply_medium(Arena *arena) {
   add_rect(arena, (Rect) {14, 5, 2, 1});
 }
 
-// Applies the hard layout.
 static void apply_hard(Arena *arena) {
   add_rect(arena, (Rect) {4, 7, 2, 3});
   add_rect(arena, (Rect) {17, 7, 2, 3});

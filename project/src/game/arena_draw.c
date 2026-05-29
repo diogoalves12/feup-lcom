@@ -11,6 +11,13 @@
 #define PLAYER1_SPAWN_COLOR 0x3A7BFF
 #define PLAYER2_SPAWN_COLOR 0xD96A2A
 
+static Position tile_origin(int row, int col) {
+  Position position;
+  position.x = col * TILE_SIZE;
+  position.y = row * TILE_SIZE;
+  return position;
+}
+
 static uint16_t marker_offset(void) {
   return TILE_SIZE / 4;
 }
@@ -20,22 +27,20 @@ static uint16_t marker_size(void) {
 }
 
 static int draw_floor(int row, int col) {
-  uint16_t x = (uint16_t) (col * TILE_SIZE);
-  uint16_t y = (uint16_t) (row * TILE_SIZE);
+  const Position origin = tile_origin(row, col);
   uint32_t color = ((row + col) % 2 == 0) ? FLOOR_COLOR : FLOOR_ALT_COLOR;
-  return renderer_draw_rectangle(x, y, TILE_SIZE, TILE_SIZE, color);
+  return renderer_draw_rectangle((uint16_t) origin.x, (uint16_t) origin.y, TILE_SIZE, TILE_SIZE, color);
 }
 
 static int draw_wall(int row, int col) {
-  uint16_t x = (uint16_t) (col * TILE_SIZE);
-  uint16_t y = (uint16_t) (row * TILE_SIZE);
-  return renderer_draw_rectangle(x, y, TILE_SIZE, TILE_SIZE, WALL_COLOR);
+  const Position origin = tile_origin(row, col);
+  return renderer_draw_rectangle((uint16_t) origin.x, (uint16_t) origin.y, TILE_SIZE, TILE_SIZE, WALL_COLOR);
 }
 
-// Draws a marker inside a tile.
 static int draw_marker(int row, int col, uint32_t color) {
-  uint16_t x = (uint16_t) (col * TILE_SIZE + marker_offset());
-  uint16_t y = (uint16_t) (row * TILE_SIZE + marker_offset());
+  const Position origin = tile_origin(row, col);
+  uint16_t x = (uint16_t) (origin.x + marker_offset());
+  uint16_t y = (uint16_t) (origin.y + marker_offset());
   return renderer_draw_rectangle(x, y, marker_size(), marker_size(), color);
 }
 
