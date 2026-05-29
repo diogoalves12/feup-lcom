@@ -5,11 +5,9 @@
 #include <stdint.h>
 
 typedef struct {
-  bool up;
-  bool down;
-  bool left;
-  bool right;
+  bool move_forward;
   bool shoot;
+  bool action;
   bool exit_requested;
 } KeyboardInput;
 

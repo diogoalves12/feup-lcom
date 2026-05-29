@@ -6,9 +6,7 @@
 #define KEYBOARD_MAKE_MASK 0x7F
 
 #define W_MAKECODE 0x11
-#define A_MAKECODE 0x1E
-#define S_MAKECODE 0x1F
-#define D_MAKECODE 0x20
+#define E_MAKECODE 0x12
 #define SPACE_MAKECODE 0x39
 #define ESC_BREAKCODE 0x81
 
@@ -17,11 +15,9 @@ void keyboard_input_init(KeyboardInput *input) {
     return;
   }
 
-  input->up = false;
-  input->down = false;
-  input->left = false;
-  input->right = false;
+  input->move_forward = false;
   input->shoot = false;
+  input->action = false;
   input->exit_requested = false;
 }
 
@@ -43,19 +39,13 @@ void keyboard_input_update(KeyboardInput *input, uint8_t scancode) {
 
   switch (makecode) {
     case W_MAKECODE:
-      input->up = pressed;
-      break;
-    case A_MAKECODE:
-      input->left = pressed;
-      break;
-    case S_MAKECODE:
-      input->down = pressed;
-      break;
-    case D_MAKECODE:
-      input->right = pressed;
+      input->move_forward = pressed;
       break;
     case SPACE_MAKECODE:
       input->shoot = pressed;
+      break;
+    case E_MAKECODE:
+      input->action = pressed;
       break;
     default:
       break;
