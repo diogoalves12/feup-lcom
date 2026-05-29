@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include "arena.h"
+#include "game_input.h"
 #include "i8042.h"
 #include "keyboard.h"
 #include "keyboard_input.h"
@@ -16,7 +17,8 @@
 typedef struct {
   bool running;
   uint32_t frame_counter;
-  KeyboardInput input;
+  KeyboardInput keyboard_input;
+  GameInputActions input_actions;
   // Stores the generated map layout for the current match.
   Arena arena;
 } Game;
@@ -101,7 +103,8 @@ static int game_init(Game *game) {
 
   game->running = true;
   game->frame_counter = 0;
-  keyboard_input_init(&game->input);
+  keyboard_input_init(&game->keyboard_input);
+  game_input_actions_init(&game->input_actions);
 
   return 0;
 }
@@ -159,9 +162,10 @@ static int game_loop(Game *game) {
       kbc_ih();
 
       if (!keyboard_has_error()) {
-        keyboard_input_update(&game->input, keyboard_get_scancode());
+        keyboard_input_update(&game->keyboard_input, keyboard_get_scancode());
+        game_input_actions_from_keyboard(&game->input_actions, &game->keyboard_input);
 
-        if (game->input.exit_requested) {
+        if (game->input_actions.exit_requested) {
           game->running = false;
         }
       }
