@@ -10,6 +10,7 @@
 #include "keyboard.h"
 #include "keyboard_input.h"
 #include "menu.h"
+#include "player.h"
 #include "renderer.h"
 
 #define PROJECT_TEST_VIDEO_MODE 0x115
@@ -21,6 +22,8 @@ typedef struct {
   GameInputActions input_actions;
   // Stores the generated map layout for the current match.
   Arena arena;
+  Player player1;
+  Player player2;
 } Game;
 
 static int game_init(Game *game);
@@ -100,6 +103,15 @@ static int game_init(Game *game) {
     renderer_shutdown();
     return 1;
   }
+
+  player_init(&game->player1,
+              arena_get_player1_spawn(&game->arena),
+              PLAYER1_INITIAL_ANGLE,
+              PLAYER1_COLOR);
+  player_init(&game->player2,
+              arena_get_player2_spawn(&game->arena),
+              PLAYER2_INITIAL_ANGLE,
+              PLAYER2_COLOR);
 
   game->running = true;
   game->frame_counter = 0;
