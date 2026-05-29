@@ -126,3 +126,26 @@ void player_rotate(Player *player, float delta_angle) {
     player->angle += PLAYER_FULL_ROTATION;
   }
 }
+
+Position player_get_forward_position(const Player *player, float distance) {
+  if (player == NULL) {
+    return (Position) {0, 0};
+  }
+
+  if (!player->alive || distance <= 0.0f) {
+    return player->position;
+  }
+
+  int dx = (int) roundf(cosf(player->angle) * distance);
+  int dy = (int) roundf(sinf(player->angle) * distance);
+
+  return (Position) {player->position.x + dx, player->position.y + dy};
+}
+
+void player_move_forward(Player *player, float distance) {
+  if (player == NULL || !player->alive || distance <= 0.0f) {
+    return;
+  }
+
+  player->position = player_get_forward_position(player, distance);
+}

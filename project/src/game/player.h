@@ -15,6 +15,7 @@
 #define PLAYER2_COLOR 0xFF4040
 #define PLAYER_FULL_ROTATION 6.2831852f
 #define PLAYER_ROTATION_STEP 0.10f
+#define PLAYER_MOVE_SPEED 3.0f
 
 typedef struct {
   Position position;
@@ -34,5 +35,7 @@ void player_set_position(Player *player, Position position);
 Position player_get_position(const Player *player);
 int player_draw(const Player *player);
 void player_rotate(Player *player, float delta_angle);
+Position player_get_forward_position(const Player *player, float distance);
+void player_move_forward(Player *player, float distance);
 
 #endif
