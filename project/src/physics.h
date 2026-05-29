@@ -5,10 +5,10 @@
 #include <stdint.h>
 
 typedef struct {
-    int16_t x;
-    int16_t y;
-    uint16_t width;
-    uint16_t height;
+  int16_t x;
+  int16_t y;
+  uint16_t width;
+  uint16_t height;
 } BoundingBox;
 
 bool physics_check_collision(BoundingBox a, BoundingBox b);

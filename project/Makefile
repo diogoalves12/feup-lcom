@@ -3,26 +3,27 @@ PROG = proj
 .PATH: ${.CURDIR}/src
 .PATH: ${.CURDIR}/src/graphics
 .PATH: ${.CURDIR}/src/game
-.PATH: ${.CURDIR}/src/iu
+.PATH: ${.CURDIR}/src/input
+.PATH: ${.CURDIR}/src/ui
 .PATH: ${.CURDIR}/../lab2
 .PATH: ${.CURDIR}/../lab3
-.PATH: ${.CURDIR}/../lab4
 .PATH: ${.CURDIR}/../lab5
 
-SRCS = main.c renderer.c physics.c game.c arena.c menu.c timer.c keyboard.c mouse.c video.c utils.c
+SRCS = main.c renderer.c arena.c arena_layout.c arena_draw.c player.c physics.c keyboard_input.c game_input.c menu.c timer.c keyboard.c video.c utils.c
 
 CFLAGS += -pedantic
 CFLAGS += -I${.CURDIR}/src
 CFLAGS += -I${.CURDIR}/src/graphics
 CFLAGS += -I${.CURDIR}/src/game
-CFLAGS += -I${.CURDIR}/src/iu
+CFLAGS += -I${.CURDIR}/src/input
+CFLAGS += -I${.CURDIR}/src/ui
 CFLAGS += -I../lab2
 CFLAGS += -I../lab3
-CFLAGS += -I../lab4
 CFLAGS += -I../lab5
 
 DPADD += ${LIBLCF}
 LDADD += -llcf
+LDADD += -lm
 
 all: timer_lib kbd_lib video_lib
 

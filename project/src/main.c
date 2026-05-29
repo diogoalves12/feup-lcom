@@ -5,27 +5,25 @@
 #include <stdio.h>
 
 #include "arena.h"
+#include "game_input.h"
 #include "i8042.h"
 #include "keyboard.h"
-#include "renderer.h"
-#include "game.h"
+#include "keyboard_input.h"
 #include "menu.h"
+#include "player.h"
+#include "renderer.h"
 
 #define PROJECT_TEST_VIDEO_MODE 0x115
 #define PROJECT_BACKGROUND_COLOR 0x101010
-#define PROJECT_ARENA_SEED 12345
-
 typedef struct {
   bool running;
   uint32_t frame_counter;
+  KeyboardInput keyboard_input;
+  GameInputActions input_actions;
   // Stores the generated map layout for the current match.
   Arena arena;
-  
   Player player1;
-  bool key_w_pressed;
-  bool key_a_pressed;
-  bool key_s_pressed;
-  bool key_d_pressed;
+  Player player2;
 } Game;
 
 static int game_init(Game *game);
@@ -61,11 +59,9 @@ int(proj_main_loop)(int argc, char *argv[]) {
     return 1;
   }
 
-  MenuState menu_result = menu_loop();
+  MenuResult menu_result = menu_loop();
 
-  if (menu_result == MENU_EXIT_GAME) {
-    printf("Exiting from menu.\n");
-
+  if (menu_result == MENU_RESULT_EXIT_GAME) {
     if (game_shutdown(&game) != 0) {
       printf("Failed to shut down the game cleanly.\n");
       return 1;
@@ -75,13 +71,11 @@ int(proj_main_loop)(int argc, char *argv[]) {
     return 0;
   }
 
-  if (menu_result == MENU_START_GAME) {
-    printf("Starting game.\n");
+  printf("Starting game.\n");
 
-    if (game_loop(&game) != 0) {
-      game_shutdown(&game);
-      return 1;
-    }
+  if (game_loop(&game) != 0) {
+    game_shutdown(&game);
+    return 1;
   }
 
   if (game_shutdown(&game) != 0) {
@@ -91,7 +85,6 @@ int(proj_main_loop)(int argc, char *argv[]) {
 
   printf("Returned to text mode.\n");
 
-  renderer_shutdown();
   return 0;
 }
 
@@ -105,29 +98,25 @@ static int game_init(Game *game) {
     return 1;
   }
 
-  // The seed is fixed for now, but later it can come from RTC or menu settings.
-  if (arena_init(&game->arena, DEFAULT_ARENA_DIFFICULTY, PROJECT_ARENA_SEED) != 0) {
+  if (arena_init(&game->arena, DEFAULT_ARENA_DIFFICULTY) != 0) {
     printf("Failed to initialize arena.\n");
     renderer_shutdown();
     return 1;
   }
 
-  Position spawn = arena_get_player1_spawn(&game->arena);
-  game->player1.box.x = spawn.x;
-  game->player1.box.y = spawn.y;
-  game->player1.box.width = 16;
-  game->player1.box.height = 16;
-  game->player1.vx = 0;
-  game->player1.vy = 0;
-  game->player1.color = 0x0033CC;
-
-  game->key_w_pressed = false;
-  game->key_a_pressed = false;
-  game->key_s_pressed = false;
-  game->key_d_pressed = false;
+  player_init(&game->player1,
+              arena_get_player1_spawn(&game->arena),
+              PLAYER1_INITIAL_ANGLE,
+              PLAYER1_COLOR);
+  player_init(&game->player2,
+              arena_get_player2_spawn(&game->arena),
+              PLAYER2_INITIAL_ANGLE,
+              PLAYER2_COLOR);
 
   game->running = true;
   game->frame_counter = 0;
+  keyboard_input_init(&game->keyboard_input);
+  game_input_actions_init(&game->input_actions);
 
   return 0;
 }
@@ -185,26 +174,11 @@ static int game_loop(Game *game) {
       kbc_ih();
 
       if (!keyboard_has_error()) {
-        uint8_t scancode = keyboard_get_scancode();
+        keyboard_input_update(&game->keyboard_input, keyboard_get_scancode());
+        game_input_actions_from_keyboard(&game->input_actions, &game->keyboard_input);
 
-        if (scancode == ESC_BREAKCODE) {
+        if (game->input_actions.exit_requested) {
           game->running = false;
-        } else if (scancode == 0x11) { // W make
-          game->key_w_pressed = true;
-        } else if (scancode == 0x91) { // W break
-          game->key_w_pressed = false;
-        } else if (scancode == 0x1E) { // A make
-          game->key_a_pressed = true;
-        } else if (scancode == 0x9E) { // A break
-          game->key_a_pressed = false;
-        } else if (scancode == 0x1F) { // S make
-          game->key_s_pressed = true;
-        } else if (scancode == 0x9F) { // S break
-          game->key_s_pressed = false;
-        } else if (scancode == 0x20) { // D make
-          game->key_d_pressed = true;
-        } else if (scancode == 0xA0) { // D break
-          game->key_d_pressed = false;
         }
       }
     }
@@ -229,17 +203,8 @@ static void game_update(Game *game) {
   }
 
   game->frame_counter++;
-
-  int16_t speed = 5;
-  game->player1.vx = 0;
-  game->player1.vy = 0;
-
-  if (game->key_w_pressed) game->player1.vy -= speed;
-  if (game->key_s_pressed) game->player1.vy += speed;
-  if (game->key_a_pressed) game->player1.vx -= speed;
-  if (game->key_d_pressed) game->player1.vx += speed;
-
-  game_move_player(&game->player1, &game->arena);
+  player_rotate(&game->player1, PLAYER_ROTATION_STEP);
+  player_rotate(&game->player2, PLAYER_ROTATION_STEP);
 }
 
 static int game_render(const Game *game) {
@@ -255,7 +220,11 @@ static int game_render(const Game *game) {
     return 1;
   }
 
-  if (renderer_draw_rectangle(game->player1.box.x, game->player1.box.y, game->player1.box.width, game->player1.box.height, game->player1.color) != 0) {
+  if (player_draw(&game->player1) != 0) {
+    return 1;
+  }
+
+  if (player_draw(&game->player2) != 0) {
     return 1;
   }
 
