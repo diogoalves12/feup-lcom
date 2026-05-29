@@ -23,6 +23,7 @@ CFLAGS += -I../lab5
 
 DPADD += ${LIBLCF}
 LDADD += -llcf
+LDADD += -lm
 
 all: timer_lib kbd_lib video_lib
 

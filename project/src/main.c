@@ -203,6 +203,8 @@ static void game_update(Game *game) {
   }
 
   game->frame_counter++;
+  player_rotate(&game->player1, PLAYER_ROTATION_STEP);
+  player_rotate(&game->player2, PLAYER_ROTATION_STEP);
 }
 
 static int game_render(const Game *game) {

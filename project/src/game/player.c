@@ -1,8 +1,12 @@
 #include "player.h"
 
+#include <math.h>
 #include <stddef.h>
 
 #include "renderer.h"
+
+#define PLAYER_DIRECTION_INDICATOR_SIZE 4
+#define PLAYER_DIRECTION_INDICATOR_COLOR 0xFFFFFF
 
 void player_init(Player *player, Position spawn, float angle, uint32_t color) {
   if (player == NULL) {
@@ -79,9 +83,46 @@ int player_draw(const Player *player) {
     return 1;
   }
 
-  return renderer_draw_rectangle((uint16_t) x,
-                                 (uint16_t) y,
-                                 player->width,
-                                 player->height,
-                                 player->color);
+  if (renderer_draw_rectangle((uint16_t) x,
+                              (uint16_t) y,
+                              player->width,
+                              player->height,
+                              player->color) != 0) {
+    return 1;
+  }
+
+  int front_x = player->position.x + (int) ((player->width / 2) * cosf(player->angle));
+  int front_y = player->position.y + (int) ((player->height / 2) * sinf(player->angle));
+  int indicator_x = front_x - PLAYER_DIRECTION_INDICATOR_SIZE / 2;
+  int indicator_y = front_y - PLAYER_DIRECTION_INDICATOR_SIZE / 2;
+
+  if (indicator_x < 0 || indicator_y < 0) {
+    return 0;
+  }
+
+  if (renderer_draw_rectangle((uint16_t) indicator_x,
+                              (uint16_t) indicator_y,
+                              PLAYER_DIRECTION_INDICATOR_SIZE,
+                              PLAYER_DIRECTION_INDICATOR_SIZE,
+                              PLAYER_DIRECTION_INDICATOR_COLOR) != 0) {
+    return 1;
+  }
+
+  return 0;
+}
+
+void player_rotate(Player *player, float delta_angle) {
+  if (player == NULL || !player->alive) {
+    return;
+  }
+
+  player->angle += delta_angle;
+
+  while (player->angle >= PLAYER_FULL_ROTATION) {
+    player->angle -= PLAYER_FULL_ROTATION;
+  }
+
+  while (player->angle < 0.0f) {
+    player->angle += PLAYER_FULL_ROTATION;
+  }
 }

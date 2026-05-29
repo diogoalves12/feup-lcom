@@ -13,6 +13,8 @@
 #define PLAYER2_INITIAL_ANGLE 3.1415926f
 #define PLAYER1_COLOR 0x00AAFF
 #define PLAYER2_COLOR 0xFF4040
+#define PLAYER_FULL_ROTATION 6.2831852f
+#define PLAYER_ROTATION_STEP 0.10f
 
 typedef struct {
   Position position;
@@ -31,5 +33,6 @@ void player_damage(Player *player, int damage);
 void player_set_position(Player *player, Position position);
 Position player_get_position(const Player *player);
 int player_draw(const Player *player);
+void player_rotate(Player *player, float delta_angle);
 
 #endif
