@@ -2,6 +2,8 @@
 
 #include <stddef.h>
 
+#include "renderer.h"
+
 void player_init(Player *player, Position spawn, float angle, uint32_t color) {
   if (player == NULL) {
     return;
@@ -59,4 +61,27 @@ Position player_get_position(const Player *player) {
   }
 
   return player->position;
+}
+
+int player_draw(const Player *player) {
+  if (player == NULL) {
+    return 1;
+  }
+
+  if (!player->alive) {
+    return 0;
+  }
+
+  int x = player->position.x - player->width / 2;
+  int y = player->position.y - player->height / 2;
+
+  if (x < 0 || y < 0) {
+    return 1;
+  }
+
+  return renderer_draw_rectangle((uint16_t) x,
+                                 (uint16_t) y,
+                                 player->width,
+                                 player->height,
+                                 player->color);
 }

@@ -218,6 +218,14 @@ static int game_render(const Game *game) {
     return 1;
   }
 
+  if (player_draw(&game->player1) != 0) {
+    return 1;
+  }
+
+  if (player_draw(&game->player2) != 0) {
+    return 1;
+  }
+
   if (renderer_present() != 0) {
     return 1;
   }

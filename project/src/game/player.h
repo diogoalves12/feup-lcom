@@ -30,5 +30,6 @@ void player_kill(Player *player);
 void player_damage(Player *player, int damage);
 void player_set_position(Player *player, Position position);
 Position player_get_position(const Player *player);
+int player_draw(const Player *player);
 
 #endif
