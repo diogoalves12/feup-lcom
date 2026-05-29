@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include "arena.h"
+#include "collision.h"
 #include "game_input.h"
 #include "i8042.h"
 #include "keyboard.h"
@@ -31,8 +32,6 @@ static int game_loop(Game *game);
 static void game_update(Game *game);
 static int game_render(const Game *game);
 static int game_shutdown(Game *game);
-static bool game_player_collides_with_walls(const Arena *arena, const Player *player, Position position);
-static bool game_can_move_player_to(const Game *game, const Player *player, Position position);
 
 int main(int argc, char *argv[]) {
   lcf_set_language("EN-US");
@@ -209,7 +208,7 @@ static void game_update(Game *game) {
   if (game->input_actions.player1.move_forward) {
     Position next_position = player_get_forward_position(&game->player1, PLAYER_MOVE_SPEED);
 
-    if (game_can_move_player_to(game, &game->player1, next_position)) {
+    if (!collision_player_walls(&game->arena, &game->player1, next_position)) {
       player_set_position(&game->player1, next_position);
     }
   } else {
@@ -217,46 +216,6 @@ static void game_update(Game *game) {
   }
 
   player_rotate(&game->player2, PLAYER_ROTATION_STEP);
-}
-
-static bool game_player_collides_with_walls(const Arena *arena, const Player *player, Position position) {
-  if (arena == NULL || player == NULL) {
-    return true;
-  }
-
-  int left = position.x - player->width / 2;
-  int right = position.x + player->width / 2 - 1;
-  int top = position.y - player->height / 2;
-  int bottom = position.y + player->height / 2 - 1;
-
-  if (left < 0 || top < 0) {
-    return true;
-  }
-
-  int left_col = left / TILE_SIZE;
-  int right_col = right / TILE_SIZE;
-  int top_row = top / TILE_SIZE;
-  int bottom_row = bottom / TILE_SIZE;
-
-  for (int row = top_row; row <= bottom_row; row++) {
-    for (int col = left_col; col <= right_col; col++) {
-      TileType type = arena_get_tile_type(arena, row, col);
-
-      if (arena_is_wall_tile(type)) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
-
-static bool game_can_move_player_to(const Game *game, const Player *player, Position position) {
-  if (game == NULL || player == NULL) {
-    return false;
-  }
-
-  return !game_player_collides_with_walls(&game->arena, player, position);
 }
 
 static int game_render(const Game *game) {
