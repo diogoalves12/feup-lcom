@@ -14,7 +14,15 @@ typedef struct {
 typedef struct {
   PlayerInputActions player1;
   PlayerInputActions player2;
-  bool exit_requested;
+
+  /* Navigation actions — used by menu and game-over screens. */
+  bool nav_up;
+  bool nav_down;
+  bool confirm;
+  bool back;
+
+  /* In-game actions. */
+  bool pause_requested;
 } GameInputActions;
 
 void game_input_actions_init(GameInputActions *actions);
