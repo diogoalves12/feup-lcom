@@ -28,6 +28,9 @@ void game_input_actions_from_keyboard(GameInputActions *actions, const KeyboardI
   actions->player1.shoot        = keyboard->shoot;
   actions->player1.action       = keyboard->action;
 
+  /* Player 2 has no input yet, cleared explicitly each tick. */
+  player_input_clear(&actions->player2);
+
   /* Navigation and meta actions come from one-shot keyboard events. */
   actions->nav_up          = keyboard->nav_up;
   actions->nav_down        = keyboard->nav_down;

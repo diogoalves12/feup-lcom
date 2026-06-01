@@ -1,7 +1,7 @@
 proj
 *.o
 *.d
-.gdbinit 
+.gdbinit
 output.txt
 trace.txt
-./DS_Store
+.DS_Store
