@@ -12,5 +12,12 @@ CFLAGS += -pedantic -I../lab2
 DPADD += ${LIBLCF} ../lab2/libtimer.a
 LDADD += -llcf -L../lab2 -ltimer
 
+LIB_NAME = libmouse.a
+LIB_OBJS = mouse.o
+CLEANFILES += ${LIB_NAME} ${LIB_OBJS}
+
+lib: ${LIB_OBJS}
+	ar rcs ${LIB_NAME} ${LIB_OBJS}
+
 # include LCOM's makefile that does all the "heavy lifting"
 .include <minix.lcom.mk>

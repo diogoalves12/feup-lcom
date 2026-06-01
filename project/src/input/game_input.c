@@ -28,13 +28,18 @@ void game_input_actions_from_keyboard(GameInputActions *actions, const KeyboardI
   actions->player1.shoot        = keyboard->shoot;
   actions->player1.action       = keyboard->action;
 
-  /* Player 2 has no input yet, cleared explicitly each tick. */
   player_input_clear(&actions->player2);
 
-  /* Navigation and meta actions come from one-shot keyboard events. */
   actions->nav_up          = keyboard->nav_up;
   actions->nav_down        = keyboard->nav_down;
   actions->confirm         = keyboard->confirm;
   actions->back            = keyboard->escape;
   actions->pause_requested = keyboard->pause_toggle;
+}
+
+void game_input_actions_apply_mouse(GameInputActions *actions, const MouseInput *mouse) {
+  if (actions == NULL || mouse == NULL) return;
+  actions->player2.move_forward = mouse->move_forward;
+  actions->player2.shoot        = mouse->shoot;
+  actions->player2.action       = mouse->action;
 }

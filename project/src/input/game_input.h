@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #include "keyboard_input.h"
+#include "mouse_input.h"
 
 typedef struct {
   bool move_forward;
@@ -27,5 +28,6 @@ typedef struct {
 
 void game_input_actions_init(GameInputActions *actions);
 void game_input_actions_from_keyboard(GameInputActions *actions, const KeyboardInput *keyboard);
+void game_input_actions_apply_mouse(GameInputActions *actions, const MouseInput *mouse);
 
 #endif

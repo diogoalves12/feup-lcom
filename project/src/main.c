@@ -14,6 +14,8 @@
 #include "keyboard.h"
 #include "keyboard_input.h"
 #include "menu.h"
+#include "mouse.h"
+#include "mouse_input.h"
 #include "player.h"
 #include "renderer.h"
 
@@ -28,6 +30,9 @@ typedef struct {
   GameState        state;
   uint32_t         frame_counter;
   KeyboardInput    keyboard;
+  MouseInput       mouse;
+  uint8_t          mouse_packet[3];
+  uint8_t          mouse_packet_idx;
   GameInputActions actions;
   Arena            arena;
   Player           player1;
@@ -90,6 +95,8 @@ static int game_init(Game *game) {
   }
 
   keyboard_input_init(&game->keyboard);
+  mouse_input_init(&game->mouse);
+  game->mouse_packet_idx   = 0;
   game_input_actions_init(&game->actions);
   game->frame_counter       = 0;
   game->restart_requested   = false;
@@ -155,6 +162,7 @@ static int game_run(Game *game) {
 
   uint8_t timer_bit_no;
   uint8_t keyboard_bit_no;
+  uint8_t mouse_bit_no;
 
   if (timer_subscribe_int(&timer_bit_no) != 0) {
     printf("Failed to subscribe timer interrupts.\n");
@@ -163,6 +171,21 @@ static int game_run(Game *game) {
 
   if (keyboard_subscribe_int(&keyboard_bit_no) != 0) {
     printf("Failed to subscribe keyboard interrupts.\n");
+    timer_unsubscribe_int();
+    return 1;
+  }
+
+  if (mouse_subscribe_int(&mouse_bit_no) != 0) {
+    printf("Failed to subscribe mouse interrupts.\n");
+    keyboard_unsubscribe_int();
+    timer_unsubscribe_int();
+    return 1;
+  }
+
+  if (mouse_enable_data_reporting_custom() != 0) {
+    printf("Failed to enable mouse data reporting.\n");
+    mouse_unsubscribe_int();
+    keyboard_unsubscribe_int();
     timer_unsubscribe_int();
     return 1;
   }
@@ -194,11 +217,33 @@ static int game_run(Game *game) {
       }
     }
 
+    if (msg.m_notify.interrupts & BIT(mouse_bit_no)) {
+      mouse_ih();
+      if (!mouse_get_error()) {
+        uint8_t byte = mouse_get_byte();
+        struct packet pkt;
+        if (mouse_sync_byte(byte, game->mouse_packet, &game->mouse_packet_idx)) {
+          mouse_parse_packet_bytes(game->mouse_packet, &pkt);
+          mouse_input_set(&game->mouse, pkt.lb, pkt.rb, pkt.mb);
+        }
+      }
+    }
+
     if (msg.m_notify.interrupts & BIT(timer_bit_no)) {
       timer_int_handler();
       game->frame_counter++;
       game_tick(game);
     }
+  }
+
+  if (mouse_disable_data_reporting() != 0) {
+    printf("Failed to disable mouse data reporting.\n");
+    result = 1;
+  }
+
+  if (mouse_unsubscribe_int() != 0) {
+    printf("Failed to unsubscribe mouse interrupts.\n");
+    result = 1;
   }
 
   if (keyboard_unsubscribe_int() != 0) {
@@ -216,6 +261,7 @@ static int game_run(Game *game) {
 
 static void game_tick(Game *game) {
   game_input_actions_from_keyboard(&game->actions, &game->keyboard);
+  game_input_actions_apply_mouse(&game->actions, &game->mouse);
   keyboard_input_clear_oneshots(&game->keyboard);
 
   switch (game->state) {
@@ -255,7 +301,14 @@ static void state_playing_tick(Game *game) {
     player_rotate(&game->player1, PLAYER_ROTATION_STEP);
   }
 
-  player_rotate(&game->player2, PLAYER_ROTATION_STEP);
+  if (game->actions.player2.move_forward) {
+    Position next_pos = player_get_forward_position(&game->player2, PLAYER_MOVE_SPEED);
+    if (!collision_player_walls(&game->arena, &game->player2, next_pos)) {
+      player_set_position(&game->player2, next_pos);
+    }
+  } else {
+    player_rotate(&game->player2, PLAYER_ROTATION_STEP);
+  }
 
   if (!player_is_alive(&game->player1)) {
     game->game_over.winner = 2;
