@@ -9,7 +9,7 @@ PROG = proj
 .PATH: ${.CURDIR}/../lab3
 .PATH: ${.CURDIR}/../lab5
 
-SRCS = main.c renderer.c arena.c arena_layout.c arena_draw.c player.c collision.c bullet.c keyboard_input.c game_input.c mouse_input.c menu.c game_over.c pause_menu.c timer.c keyboard.c video.c utils.c
+SRCS = main.c renderer.c arena.c arena_layout.c arena_draw.c player.c collision.c combat.c keyboard_input.c game_input.c mouse_input.c menu.c game_over.c pause_menu.c timer.c keyboard.c video.c utils.c
 
 CFLAGS += -pedantic
 CFLAGS += -I${.CURDIR}/src
