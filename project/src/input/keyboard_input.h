@@ -17,6 +17,8 @@ typedef struct {
   bool escape;
   bool confirm;
   bool pause_toggle;
+  bool debug_damage_p1;
+  bool debug_damage_p2;
 
   /* Internal: tracks the 0xE0 extended-scancode prefix. */
   bool _extended;

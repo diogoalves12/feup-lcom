@@ -104,6 +104,18 @@ int player_draw(const Player *player) {
   return 0;
 }
 
+void player_draw_health_bar(const Player *player, int screen_x, int screen_y) {
+  if (player == NULL || !player->alive || player->health <= 0) {
+    return;
+  }
+
+  int hp_width = 15;
+  int bar_width = player->health * hp_width;
+  int bar_height = 8;
+
+  renderer_draw_rectangle(screen_x, screen_y, bar_width, bar_height, player->color);
+}
+
 void player_rotate(Player *player, float delta_angle) {
   if (player == NULL || !player->alive) {
     return;
