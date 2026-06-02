@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include "arena.h"
+#include "bullet.h"
 #include "collision.h"
 #include "game_input.h"
 #include "game_over.h"
@@ -37,6 +38,7 @@ typedef struct {
   Arena            arena;
   Player           player1;
   Player           player2;
+  BulletSystem     bullets;
   MenuState        menu;
   PauseMenuState   pause_menu;
   GameOverState    game_over;
@@ -104,6 +106,7 @@ static int game_init(Game *game) {
   game->game_over.selection = GAME_OVER_SEL_RESTART;
 
   pause_menu_state_init(&game->pause_menu);
+  bullet_system_init(&game->bullets);
 
   game->state = GAME_STATE_MENU;
   menu_state_init(&game->menu);
@@ -128,6 +131,7 @@ static void game_start_match(Game *game) {
   player_init(&game->player2,
               arena_get_player2_spawn(&game->arena),
               PLAYER2_INITIAL_ANGLE, PLAYER2_COLOR);
+  bullet_system_reset(&game->bullets);
   game->frame_counter = 0;
 }
 
@@ -323,31 +327,25 @@ static void state_playing_tick(Game *game) {
     player_rotate(&game->player1, PLAYER_ROTATION_STEP);
   }
 
-  /* DEBUG: track player2 movement state (moving/rotating/blocked) */
-  {
-    static int prev_p2_state = 0; /* 0=rotate 1=move 2=blocked */
-    if (game->actions.player2.move_forward) {
-      Position next_pos = player_get_forward_position(&game->player2, PLAYER_MOVE_SPEED);
-      if (!collision_player_walls(&game->arena, &game->player2, next_pos)) {
-        if (prev_p2_state != 1) {
-          printf("[playing] player2 moving\n");
-          prev_p2_state = 1;
-        }
-        player_set_position(&game->player2, next_pos);
-      } else {
-        if (prev_p2_state != 2) {
-          printf("[playing] player2 blocked by wall\n");
-          prev_p2_state = 2;
-        }
-      }
-    } else {
-      if (prev_p2_state != 0) {
-        printf("[playing] player2 rotating\n");
-        prev_p2_state = 0;
-      }
-      player_rotate(&game->player2, PLAYER_ROTATION_STEP);
-    }
+  if (game->actions.player1.shoot) {
+    printf("[playing] p1 shoot=true\n");
+    bullet_system_shoot(&game->bullets, &game->player1, 1);
   }
+
+  if (game->actions.player2.move_forward) {
+    Position next_pos = player_get_forward_position(&game->player2, PLAYER_MOVE_SPEED);
+    if (!collision_player_walls(&game->arena, &game->player2, next_pos)) {
+      player_set_position(&game->player2, next_pos);
+    }
+  } else {
+    player_rotate(&game->player2, PLAYER_ROTATION_STEP);
+  }
+
+  if (game->actions.player2.shoot) {
+    bullet_system_shoot(&game->bullets, &game->player2, 2);
+  }
+
+  bullet_system_update(&game->bullets, &game->arena, &game->player1, &game->player2);
 
   if (!player_is_alive(&game->player1)) {
     game->game_over.winner = 2;
@@ -406,6 +404,7 @@ static int render_playing(const Game *game) {
   if (arena_draw(&game->arena) != 0) return 1;
   if (player_draw(&game->player1) != 0) return 1;
   if (player_draw(&game->player2) != 0) return 1;
+  if (bullet_system_draw(&game->bullets) != 0) return 1;
   return renderer_present();
 }
 
@@ -414,6 +413,7 @@ static int render_paused(const Game *game) {
   if (arena_draw(&game->arena) != 0) return 1;
   if (player_draw(&game->player1) != 0) return 1;
   if (player_draw(&game->player2) != 0) return 1;
+  if (bullet_system_draw(&game->bullets) != 0) return 1;
   if (renderer_draw_rectangle(0, 0, ARENA_PIXEL_WIDTH, PAUSE_BAR_HEIGHT, PAUSE_BAR_COLOR) != 0) {
     return 1;
   }
