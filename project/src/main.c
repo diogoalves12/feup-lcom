@@ -5,8 +5,8 @@
 #include <stdio.h>
 
 #include "arena.h"
-#include "bullet.h"
 #include "collision.h"
+#include "combat.h"
 #include "game_input.h"
 #include "game_over.h"
 #include "game_state.h"
@@ -38,7 +38,9 @@ typedef struct {
   Arena            arena;
   Player           player1;
   Player           player2;
-  BulletSystem     bullets;
+  CombatState      combat;
+  bool             prev_p1_shoot;
+  bool             prev_p2_shoot;
   MenuState        menu;
   PauseMenuState   pause_menu;
   GameOverState    game_over;
@@ -106,7 +108,9 @@ static int game_init(Game *game) {
   game->game_over.selection = GAME_OVER_SEL_RESTART;
 
   pause_menu_state_init(&game->pause_menu);
-  bullet_system_init(&game->bullets);
+  combat_init(&game->combat);
+  game->prev_p1_shoot = false;
+  game->prev_p2_shoot = false;
 
   game->state = GAME_STATE_MENU;
   menu_state_init(&game->menu);
@@ -131,7 +135,10 @@ static void game_start_match(Game *game) {
   player_init(&game->player2,
               arena_get_player2_spawn(&game->arena),
               PLAYER2_INITIAL_ANGLE, PLAYER2_COLOR);
-  bullet_system_reset(&game->bullets);
+
+  combat_reset(&game->combat);
+  game->prev_p1_shoot = false;
+  game->prev_p2_shoot = false;
   game->frame_counter = 0;
 }
 
@@ -226,19 +233,8 @@ static int game_run(Game *game) {
       if (!mouse_get_error()) {
         uint8_t byte = mouse_get_byte();
         struct packet pkt;
-        /* DEBUG: trace raw bytes and packet completion */
-        printf("[mouse] byte: 0x%02X (idx=%d)\n", byte, game->mouse_packet_idx);
         if (mouse_sync_byte(byte, game->mouse_packet, &game->mouse_packet_idx)) {
           mouse_parse_packet_bytes(game->mouse_packet, &pkt);
-          printf("[mouse] packet: lb=%d rb=%d mb=%d dx=%d dy=%d xov=%d yov=%d\n",
-                 pkt.lb, pkt.rb, pkt.mb, pkt.delta_x, pkt.delta_y,
-                 pkt.x_ov, pkt.y_ov);
-          /* DEBUG: detect lb state changes */
-          static bool prev_lb = false;
-          if ((bool)pkt.lb != prev_lb) {
-            printf("[mouse] lb changed: %d -> %d\n", prev_lb, pkt.lb);
-            prev_lb = pkt.lb;
-          }
           mouse_input_set(&game->mouse, pkt.lb, pkt.rb, pkt.mb);
         }
       }
@@ -278,17 +274,6 @@ static void game_tick(Game *game) {
   game_input_actions_from_keyboard(&game->actions, &game->keyboard);
   game_input_actions_apply_mouse(&game->actions, &game->mouse);
   keyboard_input_clear_oneshots(&game->keyboard);
-
-  /* DEBUG: detect player2 move_forward state changes */
-  if (game->state == GAME_STATE_PLAYING) {
-    static bool prev_p2_fwd = false;
-    if (game->actions.player2.move_forward != prev_p2_fwd) {
-      printf("[game_tick] player2 move_forward changed: %d -> %d  (mouse.move_forward=%d)\n",
-             prev_p2_fwd, game->actions.player2.move_forward,
-             game->mouse.move_forward);
-      prev_p2_fwd = game->actions.player2.move_forward;
-    }
-  }
 
   switch (game->state) {
     case GAME_STATE_MENU:      state_menu_tick(game);      break;
@@ -335,10 +320,13 @@ static void state_playing_tick(Game *game) {
     player_rotate(&game->player1, PLAYER_ROTATION_STEP);
   }
 
-  if (game->actions.player1.shoot) {
-    printf("[playing] p1 shoot=true\n");
-    bullet_system_shoot(&game->bullets, &game->player1, 1);
+  // One shot per press, not one per frame while held.
+  if (game->actions.player1.shoot && !game->prev_p1_shoot) {
+    combat_try_shoot(&game->combat, 1,
+                     &game->player1, &game->player2,
+                     &game->arena, game->frame_counter);
   }
+  game->prev_p1_shoot = game->actions.player1.shoot;
 
   if (game->actions.player2.move_forward) {
     Position next_pos = player_get_forward_position(&game->player2, PLAYER_MOVE_SPEED);
@@ -349,11 +337,13 @@ static void state_playing_tick(Game *game) {
     player_rotate(&game->player2, PLAYER_ROTATION_STEP);
   }
 
-  if (game->actions.player2.shoot) {
-    bullet_system_shoot(&game->bullets, &game->player2, 2);
+  // One shot per press, not one per frame while held.
+  if (game->actions.player2.shoot && !game->prev_p2_shoot) {
+    combat_try_shoot(&game->combat, 2,
+                     &game->player2, &game->player1,
+                     &game->arena, game->frame_counter);
   }
-
-  bullet_system_update(&game->bullets, &game->arena, &game->player1, &game->player2);
+  game->prev_p2_shoot = game->actions.player2.shoot;
 
   if (!player_is_alive(&game->player1)) {
     game->game_over.winner = 2;
@@ -412,7 +402,6 @@ static int render_playing(const Game *game) {
   if (arena_draw(&game->arena) != 0) return 1;
   if (player_draw(&game->player1) != 0) return 1;
   if (player_draw(&game->player2) != 0) return 1;
-  if (bullet_system_draw(&game->bullets) != 0) return 1;
   player_draw_health_bar(&game->player1, 20, 20);
   player_draw_health_bar(&game->player2, ARENA_PIXEL_WIDTH - 20 - (PLAYER_DEFAULT_HEALTH * 15), 20);
   return renderer_present();
@@ -423,7 +412,6 @@ static int render_paused(const Game *game) {
   if (arena_draw(&game->arena) != 0) return 1;
   if (player_draw(&game->player1) != 0) return 1;
   if (player_draw(&game->player2) != 0) return 1;
-  if (bullet_system_draw(&game->bullets) != 0) return 1;
   player_draw_health_bar(&game->player1, 20, 20);
   player_draw_health_bar(&game->player2, ARENA_PIXEL_WIDTH - 20 - (PLAYER_DEFAULT_HEALTH * 15), 20);
   if (renderer_draw_rectangle(0, 0, ARENA_PIXEL_WIDTH, PAUSE_BAR_HEIGHT, PAUSE_BAR_COLOR) != 0) {
