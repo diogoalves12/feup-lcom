@@ -28,7 +28,7 @@ LDADD += -llcf
 LDADD += -lm
 LDADD += -L../lab4 -lmouse
 
-all: timer_lib kbd_lib video_lib mouse_lib
+all: timer_lib kbd_lib mouse_lib video_lib
 
 timer_lib:
 	cd ../lab2 && ${MAKE} lib

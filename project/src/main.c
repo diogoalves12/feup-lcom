@@ -222,8 +222,19 @@ static int game_run(Game *game) {
       if (!mouse_get_error()) {
         uint8_t byte = mouse_get_byte();
         struct packet pkt;
+        /* DEBUG: trace raw bytes and packet completion */
+        printf("[mouse] byte: 0x%02X (idx=%d)\n", byte, game->mouse_packet_idx);
         if (mouse_sync_byte(byte, game->mouse_packet, &game->mouse_packet_idx)) {
           mouse_parse_packet_bytes(game->mouse_packet, &pkt);
+          printf("[mouse] packet: lb=%d rb=%d mb=%d dx=%d dy=%d xov=%d yov=%d\n",
+                 pkt.lb, pkt.rb, pkt.mb, pkt.delta_x, pkt.delta_y,
+                 pkt.x_ov, pkt.y_ov);
+          /* DEBUG: detect lb state changes */
+          static bool prev_lb = false;
+          if ((bool)pkt.lb != prev_lb) {
+            printf("[mouse] lb changed: %d -> %d\n", prev_lb, pkt.lb);
+            prev_lb = pkt.lb;
+          }
           mouse_input_set(&game->mouse, pkt.lb, pkt.rb, pkt.mb);
         }
       }
@@ -264,6 +275,17 @@ static void game_tick(Game *game) {
   game_input_actions_apply_mouse(&game->actions, &game->mouse);
   keyboard_input_clear_oneshots(&game->keyboard);
 
+  /* DEBUG: detect player2 move_forward state changes */
+  if (game->state == GAME_STATE_PLAYING) {
+    static bool prev_p2_fwd = false;
+    if (game->actions.player2.move_forward != prev_p2_fwd) {
+      printf("[game_tick] player2 move_forward changed: %d -> %d  (mouse.move_forward=%d)\n",
+             prev_p2_fwd, game->actions.player2.move_forward,
+             game->mouse.move_forward);
+      prev_p2_fwd = game->actions.player2.move_forward;
+    }
+  }
+
   switch (game->state) {
     case GAME_STATE_MENU:      state_menu_tick(game);      break;
     case GAME_STATE_PLAYING:   state_playing_tick(game);   break;
@@ -301,13 +323,30 @@ static void state_playing_tick(Game *game) {
     player_rotate(&game->player1, PLAYER_ROTATION_STEP);
   }
 
-  if (game->actions.player2.move_forward) {
-    Position next_pos = player_get_forward_position(&game->player2, PLAYER_MOVE_SPEED);
-    if (!collision_player_walls(&game->arena, &game->player2, next_pos)) {
-      player_set_position(&game->player2, next_pos);
+  /* DEBUG: track player2 movement state (moving/rotating/blocked) */
+  {
+    static int prev_p2_state = 0; /* 0=rotate 1=move 2=blocked */
+    if (game->actions.player2.move_forward) {
+      Position next_pos = player_get_forward_position(&game->player2, PLAYER_MOVE_SPEED);
+      if (!collision_player_walls(&game->arena, &game->player2, next_pos)) {
+        if (prev_p2_state != 1) {
+          printf("[playing] player2 moving\n");
+          prev_p2_state = 1;
+        }
+        player_set_position(&game->player2, next_pos);
+      } else {
+        if (prev_p2_state != 2) {
+          printf("[playing] player2 blocked by wall\n");
+          prev_p2_state = 2;
+        }
+      }
+    } else {
+      if (prev_p2_state != 0) {
+        printf("[playing] player2 rotating\n");
+        prev_p2_state = 0;
+      }
+      player_rotate(&game->player2, PLAYER_ROTATION_STEP);
     }
-  } else {
-    player_rotate(&game->player2, PLAYER_ROTATION_STEP);
   }
 
   if (!player_is_alive(&game->player1)) {
