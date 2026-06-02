@@ -24,6 +24,8 @@ typedef struct {
 
   /* In-game actions. */
   bool pause_requested;
+  bool debug_damage_p1;
+  bool debug_damage_p2;
 } GameInputActions;
 
 void game_input_actions_init(GameInputActions *actions);

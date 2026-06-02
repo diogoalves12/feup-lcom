@@ -292,6 +292,14 @@ static void state_playing_tick(Game *game) {
     return;
   }
 
+  // Temporary testing keys to deal 1 damage to each player.
+  if (game->actions.debug_damage_p1) {
+    player_damage(&game->player1, 1);
+  }
+  if (game->actions.debug_damage_p2) {
+    player_damage(&game->player2, 1);
+  }
+
   if (game->actions.player1.move_forward) {
     Position next_pos = player_get_forward_position(&game->player1, PLAYER_MOVE_SPEED);
     if (!collision_player_walls(&game->arena, &game->player1, next_pos)) {
@@ -367,6 +375,10 @@ static int render_playing(const Game *game) {
   if (arena_draw(&game->arena) != 0) return 1;
   if (player_draw(&game->player1) != 0) return 1;
   if (player_draw(&game->player2) != 0) return 1;
+  
+  player_draw_health_bar(&game->player1, 20, 20);
+  player_draw_health_bar(&game->player2, ARENA_PIXEL_WIDTH - 20 - (PLAYER_DEFAULT_HEALTH * 15), 20);
+
   return renderer_present();
 }
 
@@ -375,6 +387,10 @@ static int render_paused(const Game *game) {
   if (arena_draw(&game->arena) != 0) return 1;
   if (player_draw(&game->player1) != 0) return 1;
   if (player_draw(&game->player2) != 0) return 1;
+  
+  player_draw_health_bar(&game->player1, 20, 20);
+  player_draw_health_bar(&game->player2, ARENA_PIXEL_WIDTH - 20 - (PLAYER_DEFAULT_HEALTH * 15), 20);
+
   if (renderer_draw_rectangle(0, 0, ARENA_PIXEL_WIDTH, PAUSE_BAR_HEIGHT, PAUSE_BAR_COLOR) != 0) {
     return 1;
   }

@@ -12,6 +12,8 @@
 #define P_MAKECODE     0x19
 #define ENTER_MAKECODE 0x1C
 #define SPACE_MAKECODE 0x39
+#define ONE_MAKECODE   0x02
+#define TWO_MAKECODE   0x03
 
 /* Extended prefix byte sent before arrows and other extended keys. */
 #define KEYBOARD_EXTENDED 0xE0
@@ -30,6 +32,8 @@ void keyboard_input_init(KeyboardInput *input) {
   input->escape        = false;
   input->confirm       = false;
   input->pause_toggle  = false;
+  input->debug_damage_p1 = false;
+  input->debug_damage_p2 = false;
   input->_extended     = false;
 }
 
@@ -40,6 +44,8 @@ void keyboard_input_clear_oneshots(KeyboardInput *input) {
   input->escape       = false;
   input->confirm      = false;
   input->pause_toggle = false;
+  input->debug_damage_p1 = false;
+  input->debug_damage_p2 = false;
 }
 
 void keyboard_input_update(KeyboardInput *input, uint8_t scancode) {
@@ -78,6 +84,8 @@ void keyboard_input_update(KeyboardInput *input, uint8_t scancode) {
     case E_MAKECODE:     input->action       = pressed;            break;
     case ENTER_MAKECODE: if (pressed) input->confirm      = true;  break;
     case P_MAKECODE:     if (pressed) input->pause_toggle = true;  break;
+    case ONE_MAKECODE:   if (pressed) input->debug_damage_p1 = true; break;
+    case TWO_MAKECODE:   if (pressed) input->debug_damage_p2 = true; break;
     default: break;
   }
 }

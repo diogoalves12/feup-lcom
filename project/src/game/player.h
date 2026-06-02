@@ -34,6 +34,7 @@ void player_damage(Player *player, int damage);
 void player_set_position(Player *player, Position position);
 Position player_get_position(const Player *player);
 int player_draw(const Player *player);
+void player_draw_health_bar(const Player *player, int screen_x, int screen_y);
 void player_rotate(Player *player, float delta_angle);
 
 // Position after moving forward.

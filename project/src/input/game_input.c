@@ -18,6 +18,8 @@ void game_input_actions_init(GameInputActions *actions) {
   actions->confirm        = false;
   actions->back           = false;
   actions->pause_requested = false;
+  actions->debug_damage_p1 = false;
+  actions->debug_damage_p2 = false;
 }
 
 void game_input_actions_from_keyboard(GameInputActions *actions, const KeyboardInput *keyboard) {
@@ -35,6 +37,8 @@ void game_input_actions_from_keyboard(GameInputActions *actions, const KeyboardI
   actions->confirm         = keyboard->confirm;
   actions->back            = keyboard->escape;
   actions->pause_requested = keyboard->pause_toggle;
+  actions->debug_damage_p1 = keyboard->debug_damage_p1;
+  actions->debug_damage_p2 = keyboard->debug_damage_p2;
 }
 
 void game_input_actions_apply_mouse(GameInputActions *actions, const MouseInput *mouse) {
