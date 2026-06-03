@@ -22,6 +22,7 @@
 #include "mouse_input.h"
 #include "pause_menu.h"
 #include "player.h"
+#include "player_view.h"
 #include "renderer.h"
 
 #define ARENA_PIXEL_WIDTH   (ARENA_COLS * TILE_SIZE)
@@ -105,8 +106,8 @@ static bool update_game_over_if_needed(Game *game) {
 }
 
 static void render_hud(const Game *game) {
-  player_draw_health_bar(&game->player1, 20, 20);
-  player_draw_health_bar(&game->player2, ARENA_PIXEL_WIDTH - 20 - (PLAYER_DEFAULT_HEALTH * 15), 20);
+  player_view_draw_health_bar(&game->player1, 20, 20);
+  player_view_draw_health_bar(&game->player2, ARENA_PIXEL_WIDTH - 20 - (PLAYER_DEFAULT_HEALTH * 15), 20);
 }
 
 static int game_setup(Game *game) {
@@ -415,8 +416,8 @@ static void state_game_over_update(Game *game) {
 static int render_playing(const Game *game) {
   if (renderer_clear(PROJECT_BG_COLOR) != 0) return 1;
   if (arena_draw(&game->arena) != 0) return 1;
-  if (player_draw(&game->player1) != 0) return 1;
-  if (player_draw(&game->player2) != 0) return 1;
+  if (player_view_draw(&game->player1) != 0) return 1;
+  if (player_view_draw(&game->player2) != 0) return 1;
   render_hud(game);
   return renderer_present();
 }
@@ -424,8 +425,8 @@ static int render_playing(const Game *game) {
 static int render_paused(const Game *game) {
   if (renderer_clear(PROJECT_BG_COLOR) != 0) return 1;
   if (arena_draw(&game->arena) != 0) return 1;
-  if (player_draw(&game->player1) != 0) return 1;
-  if (player_draw(&game->player2) != 0) return 1;
+  if (player_view_draw(&game->player1) != 0) return 1;
+  if (player_view_draw(&game->player2) != 0) return 1;
   render_hud(game);
   if (renderer_draw_rectangle(0, 0, ARENA_PIXEL_WIDTH, PAUSE_BAR_HEIGHT, PAUSE_BAR_COLOR) != 0) {
     return 1;
