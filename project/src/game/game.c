@@ -60,12 +60,15 @@ static void game_handle_mouse_interrupt(Game *game);
 
 static void game_start_match(Game *game);
 static void game_apply_transition(Game *game, GameState next);
+static void game_read_actions(Game *game);
+static void game_update(Game *game);
+static void game_render(Game *game);
 static void game_tick(Game *game);
 
-static void state_menu_tick(Game *game);
-static void state_playing_tick(Game *game);
-static void state_paused_tick(Game *game);
-static void state_game_over_tick(Game *game);
+static void state_menu_update(Game *game);
+static void state_playing_update(Game *game);
+static void state_paused_update(Game *game);
+static void state_game_over_update(Game *game);
 
 static int  render_playing(const Game *game);
 static int  render_paused(const Game *game);
@@ -307,34 +310,68 @@ static int game_loop(Game *game) {
   return result;
 }
 
-static void game_tick(Game *game) {
+static void game_read_actions(Game *game) {
   game_input_actions_from_keyboard(&game->actions, &game->keyboard);
   game_input_actions_apply_mouse(&game->actions, &game->mouse);
   keyboard_input_clear_oneshots(&game->keyboard);
+}
 
+static void game_update(Game *game) {
   switch (game->state) {
-    case GAME_STATE_MENU:      state_menu_tick(game);      break;
-    case GAME_STATE_PLAYING:   state_playing_tick(game);   break;
-    case GAME_STATE_PAUSED:    state_paused_tick(game);    break;
-    case GAME_STATE_GAME_OVER: state_game_over_tick(game); break;
+    case GAME_STATE_MENU:      state_menu_update(game);      break;
+    case GAME_STATE_PLAYING:   state_playing_update(game);   break;
+    case GAME_STATE_PAUSED:    state_paused_update(game);    break;
+    case GAME_STATE_GAME_OVER: state_game_over_update(game); break;
     case GAME_STATE_EXIT:      break;
   }
 }
 
-static void state_menu_tick(Game *game) {
+static void game_render(Game *game) {
+  int result = 0;
+  switch (game->state) {
+    case GAME_STATE_MENU:
+      if (menu_state_render(&game->menu) != 0) {
+        printf("menu_state_render failed.\n");
+        result = 1;
+      }
+      break;
+    case GAME_STATE_PLAYING:
+      if (render_playing(game) != 0) {
+        printf("render_playing failed.\n");
+        result = 1;
+      }
+      break;
+    case GAME_STATE_PAUSED:
+      if (render_paused(game) != 0) {
+        printf("render_paused failed.\n");
+        result = 1;
+      }
+      break;
+    case GAME_STATE_GAME_OVER:
+      if (game_over_state_render(&game->game_over) != 0) {
+        printf("game_over_state_render failed.\n");
+        result = 1;
+      }
+      break;
+    default: break;
+  }
+  if (result != 0) game->state = GAME_STATE_EXIT;
+}
+
+static void game_tick(Game *game) {
+  game_read_actions(game);
+  GameState state_before = game->state;
+  game_update(game);
+  if (game->state == state_before) game_render(game);
+}
+
+static void state_menu_update(Game *game) {
   GameState next = game->state;
   menu_state_update(&game->menu, &game->actions, &next);
   game_apply_transition(game, next);
-
-  if (game->state == GAME_STATE_MENU) {
-    if (menu_state_render(&game->menu) != 0) {
-      printf("menu_state_render failed.\n");
-      game->state = GAME_STATE_EXIT;
-    }
-  }
 }
 
-static void state_playing_tick(Game *game) {
+static void state_playing_update(Game *game) {
   if (game->actions.pause_requested) {
     game_apply_transition(game, GAME_STATE_PAUSED);
     return;
@@ -350,15 +387,10 @@ static void state_playing_tick(Game *game) {
   update_player_movement(&game->player2, &game->actions.player2, &game->arena);
   try_player_shot(game, 2, &game->player2, &game->player1, game->actions.player2.shoot, &game->prev_p2_shoot);
 
-  if (update_game_over_if_needed(game)) return;
-
-  if (render_playing(game) != 0) {
-    printf("render_playing failed.\n");
-    game->state = GAME_STATE_EXIT;
-  }
+  update_game_over_if_needed(game);
 }
 
-static void state_paused_tick(Game *game) {
+static void state_paused_update(Game *game) {
   GameState next = game->state;
   bool was_confirm = game->actions.confirm;
 
@@ -371,26 +403,13 @@ static void state_paused_tick(Game *game) {
       game->restart_requested = true;
     }
     game_apply_transition(game, next);
-    return;
-  }
-
-  if (render_paused(game) != 0) {
-    printf("render_paused failed.\n");
-    game->state = GAME_STATE_EXIT;
   }
 }
 
-static void state_game_over_tick(Game *game) {
+static void state_game_over_update(Game *game) {
   GameState next = game->state;
   game_over_state_update(&game->game_over, &game->actions, &next);
   game_apply_transition(game, next);
-
-  if (game->state == GAME_STATE_GAME_OVER) {
-    if (game_over_state_render(&game->game_over) != 0) {
-      printf("game_over_state_render failed.\n");
-      game->state = GAME_STATE_EXIT;
-    }
-  }
 }
 
 static int render_playing(const Game *game) {
