@@ -46,8 +46,8 @@ typedef struct {
   bool             restart_requested;
 } Game;
 
-static int  game_init(Game *game);
-static int  game_run(Game *game);
+static int  game_setup(Game *game);
+static int  game_loop(Game *game);
 static int  game_shutdown(Game *game);
 
 static void game_start_match(Game *game);
@@ -98,7 +98,7 @@ static void render_hud(const Game *game) {
   player_draw_health_bar(&game->player2, ARENA_PIXEL_WIDTH - 20 - (PLAYER_DEFAULT_HEALTH * 15), 20);
 }
 
-static int game_init(Game *game) {
+static int game_setup(Game *game) {
   if (game == NULL) return 1;
 
   if (renderer_init(PROJECT_VIDEO_MODE) != 0) {
@@ -172,7 +172,7 @@ static void game_apply_transition(Game *game, GameState next) {
   game->state = next;
 }
 
-static int game_run(Game *game) {
+static int game_loop(Game *game) {
   if (game == NULL) return 1;
 
   uint8_t timer_bit_no;
@@ -388,9 +388,9 @@ int game_main_loop(int argc, char *argv[]) {
 
   Game game;
 
-  if (game_init(&game) != 0) return 1;
+  if (game_setup(&game) != 0) return 1;
 
-  int result = game_run(&game);
+  int result = game_loop(&game);
 
   if (game_shutdown(&game) != 0) {
     printf("game_shutdown failed.\n");
