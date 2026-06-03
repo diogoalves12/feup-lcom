@@ -12,15 +12,11 @@ typedef enum {
 
 typedef struct {
   GameOverSelection selection;
-  int winner; /* 1 or 2 */
+  int winner;
 } GameOverState;
 
 void game_over_state_init(GameOverState *state, int winner);
-
-/* Called once per game tick while in GAME_STATE_GAME_OVER. */
 void game_over_state_update(GameOverState *state, const GameInputActions *actions, GameState *next);
-
-/* Draws the game-over screen. Returns 0 on success. */
 int game_over_state_render(const GameOverState *state);
 
 #endif

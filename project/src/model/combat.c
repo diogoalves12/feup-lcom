@@ -14,7 +14,6 @@ void combat_reset(CombatState *combat) {
   combat_init(combat);
 }
 
-// True when (px, py) is inside the player hitbox, expanded by COMBAT_AIM_TOLERANCE on every side.
 static bool point_inside_player(int px, int py, const Player *player) {
   if (player == NULL || !player->alive) return false;
 
@@ -34,11 +33,9 @@ bool combat_try_shoot(CombatState *combat, int shooter_num, const Player *shoote
 
   uint32_t *next_allowed_shot_frame = (shooter_num == 1) ? &combat->player1_next_allowed_shot_frame : &combat->player2_next_allowed_shot_frame;
 
-  // Skip while the shooter is still on cooldown.
   if (frame_counter < *next_allowed_shot_frame) return false;
   if (!shooter->alive || !target->alive)        return false;
 
-  // Burn the cooldown on every shot, hit or miss.
   *next_allowed_shot_frame = frame_counter + COMBAT_SHOT_COOLDOWN_TICKS;
 
   float direction_x = cosf(shooter->angle);
@@ -46,7 +43,6 @@ bool combat_try_shoot(CombatState *combat, int shooter_num, const Player *shoote
   float step_x = direction_x * (float) COMBAT_RAY_STEP;
   float step_y = direction_y * (float) COMBAT_RAY_STEP;
 
-  // Start the ray just outside the shooters hitbox to avoid an instant self hit.
   float shooter_half_width = (float) (shooter->width / 2);
   float ray_x = (float) shooter->position.x + direction_x * (shooter_half_width + 1.0f);
   float ray_y = (float) shooter->position.y + direction_y * (shooter_half_width + 1.0f);

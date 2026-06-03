@@ -13,7 +13,6 @@
 #define GAME_OVER_OPTION_WIDTH   260
 #define GAME_OVER_OPTION_X       270
 
-/* Vertical layout: winner bar, then three options. */
 #define GAME_OVER_WINNER_Y   80
 #define GAME_OVER_WINNER_H   60
 #define GAME_OVER_RESTART_Y  200
@@ -53,7 +52,6 @@ int game_over_state_render(const GameOverState *state) {
 
   if (renderer_clear(GAME_OVER_BG_COLOR) != 0) return 1;
 
-  /* Winner bar: colored by the winning player. */
   uint32_t winner_color = (state->winner == 1) ? GAME_OVER_P1_COLOR : GAME_OVER_P2_COLOR;
   if (renderer_draw_rectangle(GAME_OVER_OPTION_X, GAME_OVER_WINNER_Y,
                               GAME_OVER_OPTION_WIDTH, GAME_OVER_WINNER_H,
@@ -61,7 +59,6 @@ int game_over_state_render(const GameOverState *state) {
     return 1;
   }
 
-  /* Restart */
   if (renderer_draw_rectangle(GAME_OVER_OPTION_X, GAME_OVER_RESTART_Y,
                               GAME_OVER_OPTION_WIDTH, GAME_OVER_OPTION_H,
                               state->selection == GAME_OVER_SEL_RESTART
@@ -69,7 +66,6 @@ int game_over_state_render(const GameOverState *state) {
     return 1;
   }
 
-  /* Menu */
   if (renderer_draw_rectangle(GAME_OVER_OPTION_X, GAME_OVER_MENU_Y,
                               GAME_OVER_OPTION_WIDTH, GAME_OVER_OPTION_H,
                               state->selection == GAME_OVER_SEL_MENU
@@ -77,7 +73,6 @@ int game_over_state_render(const GameOverState *state) {
     return 1;
   }
 
-  /* Exit */
   if (renderer_draw_rectangle(GAME_OVER_OPTION_X, GAME_OVER_EXIT_Y,
                               GAME_OVER_OPTION_WIDTH, GAME_OVER_OPTION_H,
                               state->selection == GAME_OVER_SEL_EXIT

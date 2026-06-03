@@ -1,5 +1,5 @@
-#ifndef PROJECT_INPUT_GAME_INPUT_H
-#define PROJECT_INPUT_GAME_INPUT_H
+#ifndef PROJECT_CONTROLLER_GAME_INPUT_H
+#define PROJECT_CONTROLLER_GAME_INPUT_H
 
 #include <stdbool.h>
 
@@ -15,17 +15,11 @@ typedef struct {
 typedef struct {
   PlayerInputActions player1;
   PlayerInputActions player2;
-
-  /* Navigation actions — used by menu and game-over screens. */
   bool nav_up;
   bool nav_down;
   bool confirm;
   bool back;
-
-  /* In-game actions. */
   bool pause_requested;
-  bool debug_damage_p1;
-  bool debug_damage_p2;
 } GameInputActions;
 
 void game_input_actions_init(GameInputActions *actions);

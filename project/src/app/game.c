@@ -1,5 +1,3 @@
-// game.c owns the game state machine and main loop.
-
 #include <lcom/lcf.h>
 #include <lcom/timer.h>
 #include <stdbool.h>
@@ -7,6 +5,7 @@
 #include <stdio.h>
 
 #include "arena.h"
+#include "arena_draw.h"
 #include "collision.h"
 #include "combat.h"
 #include "config.h"
@@ -378,10 +377,6 @@ static void state_playing_update(Game *game) {
     return;
   }
 
-  // DEBUG: deal 1 damage to each player for testing.
-  if (game->actions.debug_damage_p1) player_damage(&game->player1, 1);
-  if (game->actions.debug_damage_p2) player_damage(&game->player2, 1);
-
   update_player_movement(&game->player1, &game->actions.player1, &game->arena);
   try_player_shot(game, 1, &game->player1, &game->player2, game->actions.player1.shoot, &game->prev_p1_shoot);
 
@@ -415,7 +410,7 @@ static void state_game_over_update(Game *game) {
 
 static int render_playing(const Game *game) {
   if (renderer_clear(PROJECT_BG_COLOR) != 0) return 1;
-  if (arena_draw(&game->arena) != 0) return 1;
+  if (arena_view_draw(&game->arena) != 0) return 1;
   if (player_view_draw(&game->player1) != 0) return 1;
   if (player_view_draw(&game->player2) != 0) return 1;
   render_hud(game);
@@ -424,7 +419,7 @@ static int render_playing(const Game *game) {
 
 static int render_paused(const Game *game) {
   if (renderer_clear(PROJECT_BG_COLOR) != 0) return 1;
-  if (arena_draw(&game->arena) != 0) return 1;
+  if (arena_view_draw(&game->arena) != 0) return 1;
   if (player_view_draw(&game->player1) != 0) return 1;
   if (player_view_draw(&game->player2) != 0) return 1;
   render_hud(game);

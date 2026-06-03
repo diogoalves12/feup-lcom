@@ -14,12 +14,7 @@ typedef struct {
 } MenuState;
 
 void menu_state_init(MenuState *menu);
-
-/* Called once per game tick while in GAME_STATE_MENU.
- * Reads actions and writes the next state into *next (unchanged if no transition). */
 void menu_state_update(MenuState *menu, const GameInputActions *actions, GameState *next);
-
-/* Draws the menu. Returns 0 on success. */
 int menu_state_render(const MenuState *menu);
 
 #endif

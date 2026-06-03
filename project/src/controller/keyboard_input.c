@@ -5,20 +5,13 @@
 #define KEYBOARD_BREAK_BIT  0x80
 #define KEYBOARD_MAKE_MASK  0x7F
 
-/* Scancodes (Set 1). */
 #define ESC_MAKECODE   0x01
 #define W_MAKECODE     0x11
 #define E_MAKECODE     0x12
 #define P_MAKECODE     0x19
 #define ENTER_MAKECODE 0x1C
 #define SPACE_MAKECODE 0x39
-#define ONE_MAKECODE   0x02
-#define TWO_MAKECODE   0x03
-
-/* Extended prefix byte sent before arrows and other extended keys. */
 #define KEYBOARD_EXTENDED 0xE0
-
-/* Extended makecodes (sent after 0xE0). */
 #define ARROW_UP_EXT   0x48
 #define ARROW_DOWN_EXT 0x50
 
@@ -32,8 +25,6 @@ void keyboard_input_init(KeyboardInput *input) {
   input->escape        = false;
   input->confirm       = false;
   input->pause_toggle  = false;
-  input->debug_damage_p1 = false;
-  input->debug_damage_p2 = false;
   input->_extended     = false;
 }
 
@@ -44,14 +35,11 @@ void keyboard_input_clear_oneshots(KeyboardInput *input) {
   input->escape       = false;
   input->confirm      = false;
   input->pause_toggle = false;
-  input->debug_damage_p1 = false;
-  input->debug_damage_p2 = false;
 }
 
 void keyboard_input_update(KeyboardInput *input, uint8_t scancode) {
   if (input == NULL) return;
 
-  /* First byte of an extended key sequence, record and wait for the second. */
   if (scancode == KEYBOARD_EXTENDED) {
     input->_extended = true;
     return;
@@ -69,7 +57,6 @@ void keyboard_input_update(KeyboardInput *input, uint8_t scancode) {
     return;
   }
 
-  /* ESC is one shot on press. */
   if (scancode == ESC_MAKECODE) {
     input->escape = true;
     return;
@@ -84,8 +71,6 @@ void keyboard_input_update(KeyboardInput *input, uint8_t scancode) {
     case E_MAKECODE:     input->action       = pressed;            break;
     case ENTER_MAKECODE: if (pressed) input->confirm      = true;  break;
     case P_MAKECODE:     if (pressed) input->pause_toggle = true;  break;
-    case ONE_MAKECODE:   if (pressed) input->debug_damage_p1 = true; break;
-    case TWO_MAKECODE:   if (pressed) input->debug_damage_p2 = true; break;
     default: break;
   }
 }

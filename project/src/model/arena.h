@@ -1,5 +1,5 @@
-#ifndef PROJECT_GAME_ARENA_H
-#define PROJECT_GAME_ARENA_H
+#ifndef PROJECT_MODEL_ARENA_H
+#define PROJECT_MODEL_ARENA_H
 
 #include <stdbool.h>
 
@@ -39,12 +39,7 @@ int arena_init(Arena *arena, ArenaDifficulty difficulty);
 
 void arena_set_tile(Arena *arena, int row, int col, TileType type);
 
-int arena_draw(const Arena *arena);
-
-// Player 1 spawn position.
 Position arena_get_player1_spawn(const Arena *arena);
-
-// Player 2 spawn position.
 Position arena_get_player2_spawn(const Arena *arena);
 
 TileType arena_get_tile_type(const Arena *arena, int row, int col);

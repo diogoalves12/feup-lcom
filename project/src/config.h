@@ -9,6 +9,4 @@
 #define PAUSE_BAR_COLOR     0xFFFF00
 #define PAUSE_BAR_HEIGHT    4
 
-#define ENABLE_DEBUG_KEYS   0
-
 #endif

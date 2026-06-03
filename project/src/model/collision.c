@@ -36,7 +36,6 @@ bool collision_player_walls(const Arena *arena, const Player *player, Position p
   const int top_row = bounds.top / TILE_SIZE;
   const int bottom_row = bounds.bottom / TILE_SIZE;
 
-  // Out of bounds tiles count as walls.
   for (int row = top_row; row <= bottom_row; row++) {
     for (int col = left_col; col <= right_col; col++) {
       TileType type = arena_get_tile_type(arena, row, col);

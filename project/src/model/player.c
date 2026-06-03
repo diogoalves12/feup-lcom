@@ -87,7 +87,6 @@ Position player_get_forward_position(const Player *player, float distance) {
     return player->position;
   }
 
-  // Move in the current angle.
   int dx = (int) roundf(cosf(player->angle) * distance);
   int dy = (int) roundf(sinf(player->angle) * distance);
 

@@ -2,7 +2,6 @@
 
 #include <stddef.h>
 
-#include "arena_draw.h"
 #include "arena_layout.h"
 
 static const int PLAYER1_SPAWN_ROW = ARENA_ROWS / 2;
@@ -69,10 +68,6 @@ int arena_init(Arena *arena, ArenaDifficulty difficulty) {
   place_spawns(arena);
 
   return 0;
-}
-
-int arena_draw(const Arena *arena) {
-  return arena_draw_tiles(arena);
 }
 
 Position arena_get_player1_spawn(const Arena *arena) {

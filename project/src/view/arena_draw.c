@@ -44,7 +44,7 @@ static int draw_marker(int row, int col, uint32_t color) {
   return renderer_draw_rectangle(x, y, marker_size(), marker_size(), color);
 }
 
-int arena_draw_tiles(const Arena *arena) {
+int arena_view_draw(const Arena *arena) {
   if (arena == NULL) {
     return 1;
   }
