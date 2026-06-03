@@ -11,7 +11,7 @@ PROG = proj
 
 SRCS = main.c game.c renderer.c arena.c arena_layout.c arena_draw.c player.c collision.c combat.c keyboard_input.c game_input.c mouse_input.c menu.c game_over.c pause_menu.c timer.c keyboard.c video.c utils.c
 
-CFLAGS += -pedantic
+CFLAGS += -pedantic -D_LCOM_OPTIMIZED_ -O2
 CFLAGS += -I${.CURDIR}/src
 CFLAGS += -I${.CURDIR}/src/graphics
 CFLAGS += -I${.CURDIR}/src/game

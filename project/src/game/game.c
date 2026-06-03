@@ -9,6 +9,7 @@
 #include "arena.h"
 #include "collision.h"
 #include "combat.h"
+#include "config.h"
 #include "game.h"
 #include "game_input.h"
 #include "game_over.h"
@@ -19,15 +20,10 @@
 #include "menu.h"
 #include "mouse.h"
 #include "mouse_input.h"
-#include "pause_menu.h" 
+#include "pause_menu.h"
 #include "player.h"
 #include "renderer.h"
 
-#define PROJECT_VIDEO_MODE  0x115
-#define PROJECT_BG_COLOR    0x101010
-
-#define PAUSE_BAR_COLOR     0xFFFF00
-#define PAUSE_BAR_HEIGHT    4
 #define ARENA_PIXEL_WIDTH   (ARENA_COLS * TILE_SIZE)
 
 static void game_start_match(Game *game);
