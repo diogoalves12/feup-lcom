@@ -26,6 +26,30 @@
 
 #define ARENA_PIXEL_WIDTH   (ARENA_COLS * TILE_SIZE)
 
+typedef struct {
+  GameState        state;
+  uint32_t         frame_counter;
+  KeyboardInput    keyboard;
+  MouseInput       mouse;
+  uint8_t          mouse_packet[3];
+  uint8_t          mouse_packet_idx;
+  GameInputActions actions;
+  Arena            arena;
+  Player           player1;
+  Player           player2;
+  CombatState      combat;
+  bool             prev_p1_shoot;
+  bool             prev_p2_shoot;
+  MenuState        menu;
+  PauseMenuState   pause_menu;
+  GameOverState    game_over;
+  bool             restart_requested;
+} Game;
+
+static int  game_init(Game *game);
+static int  game_run(Game *game);
+static int  game_shutdown(Game *game);
+
 static void game_start_match(Game *game);
 static void game_apply_transition(Game *game, GameState next);
 static void game_tick(Game *game);
@@ -74,7 +98,7 @@ static void render_hud(const Game *game) {
   player_draw_health_bar(&game->player2, ARENA_PIXEL_WIDTH - 20 - (PLAYER_DEFAULT_HEALTH * 15), 20);
 }
 
-int game_init(Game *game) {
+static int game_init(Game *game) {
   if (game == NULL) return 1;
 
   if (renderer_init(PROJECT_VIDEO_MODE) != 0) {
@@ -102,7 +126,7 @@ int game_init(Game *game) {
   return 0;
 }
 
-int game_shutdown(Game *game) {
+static int game_shutdown(Game *game) {
   (void) game;
   if (renderer_shutdown() != 0) {
     printf("renderer_shutdown failed.\n");
@@ -148,7 +172,7 @@ static void game_apply_transition(Game *game, GameState next) {
   game->state = next;
 }
 
-int game_run(Game *game) {
+static int game_run(Game *game) {
   if (game == NULL) return 1;
 
   uint8_t timer_bit_no;
@@ -356,4 +380,22 @@ static int render_paused(const Game *game) {
   }
   if (pause_menu_state_render(&game->pause_menu) != 0) return 1;
   return renderer_present();
+}
+
+int game_main_loop(int argc, char *argv[]) {
+  (void) argc;
+  (void) argv;
+
+  Game game;
+
+  if (game_init(&game) != 0) return 1;
+
+  int result = game_run(&game);
+
+  if (game_shutdown(&game) != 0) {
+    printf("game_shutdown failed.\n");
+    return 1;
+  }
+
+  return result;
 }

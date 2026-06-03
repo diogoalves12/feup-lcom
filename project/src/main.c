@@ -1,7 +1,5 @@
 #include <lcom/lcf.h>
-#include <stdio.h>
 
-#include "config.h"
 #include "game.h"
 
 int main(int argc, char *argv[]) {
@@ -14,19 +12,5 @@ int main(int argc, char *argv[]) {
 }
 
 int(proj_main_loop)(int argc, char *argv[]) {
-  (void) argc;
-  (void) argv;
-
-  Game game;
-
-  if (game_init(&game) != 0) return 1;
-
-  int result = game_run(&game);
-
-  if (game_shutdown(&game) != 0) {
-    printf("game_shutdown failed.\n");
-    return 1;
-  }
-
-  return result;
+  return game_main_loop(argc, argv);
 }
