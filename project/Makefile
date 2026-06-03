@@ -1,10 +1,10 @@
 PROG = proj
 
 .PATH: ${.CURDIR}/src
-.PATH: ${.CURDIR}/src/graphics
-.PATH: ${.CURDIR}/src/game
-.PATH: ${.CURDIR}/src/input
-.PATH: ${.CURDIR}/src/ui
+.PATH: ${.CURDIR}/src/app
+.PATH: ${.CURDIR}/src/model
+.PATH: ${.CURDIR}/src/controller
+.PATH: ${.CURDIR}/src/view
 .PATH: ${.CURDIR}/../lab2
 .PATH: ${.CURDIR}/../lab3
 .PATH: ${.CURDIR}/../lab5
@@ -13,10 +13,10 @@ SRCS = main.c game.c renderer.c arena.c arena_layout.c arena_draw.c player.c col
 
 CFLAGS += -pedantic -D_LCOM_OPTIMIZED_ -O2
 CFLAGS += -I${.CURDIR}/src
-CFLAGS += -I${.CURDIR}/src/graphics
-CFLAGS += -I${.CURDIR}/src/game
-CFLAGS += -I${.CURDIR}/src/input
-CFLAGS += -I${.CURDIR}/src/ui
+CFLAGS += -I${.CURDIR}/src/app
+CFLAGS += -I${.CURDIR}/src/model
+CFLAGS += -I${.CURDIR}/src/controller
+CFLAGS += -I${.CURDIR}/src/view
 CFLAGS += -I../lab2
 CFLAGS += -I../lab3
 CFLAGS += -I../lab4

@@ -5,11 +5,10 @@
       "includePath": [
         "${workspaceFolder}/**",
         "${workspaceFolder}/project/src",
-        "${workspaceFolder}/project/src/graphics",
-        "${workspaceFolder}/project/src/devices",
-        "${workspaceFolder}/project/src/input",
-        "${workspaceFolder}/project/src/game",
-        "${workspaceFolder}/project/src/ui",
+        "${workspaceFolder}/project/src/app",
+        "${workspaceFolder}/project/src/model",
+        "${workspaceFolder}/project/src/controller",
+        "${workspaceFolder}/project/src/view",
         "${workspaceFolder}/lab2",
         "${workspaceFolder}/lab3",
         "${workspaceFolder}/lab4",
@@ -20,6 +19,8 @@
       ],
       "defines": [
         "__minix",
+        "_MINIX",
+        "_NETBSD_SOURCE",
         "__i386__"
       ],
       "cStandard": "c11",
