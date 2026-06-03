@@ -50,6 +50,14 @@ static int  game_setup(Game *game);
 static int  game_loop(Game *game);
 static int  game_shutdown(Game *game);
 
+static int  game_subscribe_devices(uint8_t *timer_bit_no, uint8_t *keyboard_bit_no, uint8_t *mouse_bit_no);
+static int  game_unsubscribe_devices(void);
+static int  game_enable_mouse(void);
+static int  game_disable_mouse(void);
+static void game_handle_timer_interrupt(Game *game);
+static void game_handle_keyboard_interrupt(Game *game);
+static void game_handle_mouse_interrupt(Game *game);
+
 static void game_start_match(Game *game);
 static void game_apply_transition(Game *game, GameState next);
 static void game_tick(Game *game);
@@ -172,6 +180,83 @@ static void game_apply_transition(Game *game, GameState next) {
   game->state = next;
 }
 
+static int game_subscribe_devices(uint8_t *timer_bit_no, uint8_t *keyboard_bit_no, uint8_t *mouse_bit_no) {
+  if (timer_subscribe_int(timer_bit_no) != 0) {
+    printf("Failed to subscribe timer interrupts.\n");
+    return 1;
+  }
+  if (keyboard_subscribe_int(keyboard_bit_no) != 0) {
+    printf("Failed to subscribe keyboard interrupts.\n");
+    timer_unsubscribe_int();
+    return 1;
+  }
+  if (mouse_subscribe_int(mouse_bit_no) != 0) {
+    printf("Failed to subscribe mouse interrupts.\n");
+    keyboard_unsubscribe_int();
+    timer_unsubscribe_int();
+    return 1;
+  }
+  return 0;
+}
+
+static int game_unsubscribe_devices(void) {
+  int result = 0;
+  if (mouse_unsubscribe_int() != 0) {
+    printf("Failed to unsubscribe mouse interrupts.\n");
+    result = 1;
+  }
+  if (keyboard_unsubscribe_int() != 0) {
+    printf("Failed to unsubscribe keyboard interrupts.\n");
+    result = 1;
+  }
+  if (timer_unsubscribe_int() != 0) {
+    printf("Failed to unsubscribe timer interrupts.\n");
+    result = 1;
+  }
+  return result;
+}
+
+static int game_enable_mouse(void) {
+  if (mouse_enable_data_reporting_custom() != 0) {
+    printf("Failed to enable mouse data reporting.\n");
+    return 1;
+  }
+  return 0;
+}
+
+static int game_disable_mouse(void) {
+  if (mouse_disable_data_reporting() != 0) {
+    printf("Failed to disable mouse data reporting.\n");
+    return 1;
+  }
+  return 0;
+}
+
+static void game_handle_timer_interrupt(Game *game) {
+  timer_int_handler();
+  game->frame_counter++;
+  game_tick(game);
+}
+
+static void game_handle_keyboard_interrupt(Game *game) {
+  kbc_ih();
+  if (!keyboard_has_error()) {
+    keyboard_input_update(&game->keyboard, keyboard_get_scancode());
+  }
+}
+
+static void game_handle_mouse_interrupt(Game *game) {
+  mouse_ih();
+  if (!mouse_get_error()) {
+    uint8_t byte = mouse_get_byte();
+    struct packet pkt;
+    if (mouse_sync_byte(byte, game->mouse_packet, &game->mouse_packet_idx)) {
+      mouse_parse_packet_bytes(game->mouse_packet, &pkt);
+      mouse_input_set(&game->mouse, pkt.lb, pkt.rb, pkt.mb);
+    }
+  }
+}
+
 static int game_loop(Game *game) {
   if (game == NULL) return 1;
 
@@ -179,29 +264,10 @@ static int game_loop(Game *game) {
   uint8_t keyboard_bit_no;
   uint8_t mouse_bit_no;
 
-  if (timer_subscribe_int(&timer_bit_no) != 0) {
-    printf("Failed to subscribe timer interrupts.\n");
-    return 1;
-  }
+  if (game_subscribe_devices(&timer_bit_no, &keyboard_bit_no, &mouse_bit_no) != 0) return 1;
 
-  if (keyboard_subscribe_int(&keyboard_bit_no) != 0) {
-    printf("Failed to subscribe keyboard interrupts.\n");
-    timer_unsubscribe_int();
-    return 1;
-  }
-
-  if (mouse_subscribe_int(&mouse_bit_no) != 0) {
-    printf("Failed to subscribe mouse interrupts.\n");
-    keyboard_unsubscribe_int();
-    timer_unsubscribe_int();
-    return 1;
-  }
-
-  if (mouse_enable_data_reporting_custom() != 0) {
-    printf("Failed to enable mouse data reporting.\n");
-    mouse_unsubscribe_int();
-    keyboard_unsubscribe_int();
-    timer_unsubscribe_int();
+  if (game_enable_mouse() != 0) {
+    game_unsubscribe_devices();
     return 1;
   }
 
@@ -225,51 +291,18 @@ static int game_loop(Game *game) {
     if (!is_ipc_notify(ipc_status)) continue;
     if (_ENDPOINT_P(msg.m_source) != HARDWARE) continue;
 
-    if (msg.m_notify.interrupts & BIT(keyboard_bit_no)) {
-      kbc_ih();
-      if (!keyboard_has_error()) {
-        keyboard_input_update(&game->keyboard, keyboard_get_scancode());
-      }
-    }
+    if (msg.m_notify.interrupts & BIT(keyboard_bit_no))
+      game_handle_keyboard_interrupt(game);
 
-    if (msg.m_notify.interrupts & BIT(mouse_bit_no)) {
-      mouse_ih();
-      if (!mouse_get_error()) {
-        uint8_t byte = mouse_get_byte();
-        struct packet pkt;
-        if (mouse_sync_byte(byte, game->mouse_packet, &game->mouse_packet_idx)) {
-          mouse_parse_packet_bytes(game->mouse_packet, &pkt);
-          mouse_input_set(&game->mouse, pkt.lb, pkt.rb, pkt.mb);
-        }
-      }
-    }
+    if (msg.m_notify.interrupts & BIT(mouse_bit_no))
+      game_handle_mouse_interrupt(game);
 
-    if (msg.m_notify.interrupts & BIT(timer_bit_no)) {
-      timer_int_handler();
-      game->frame_counter++;
-      game_tick(game);
-    }
+    if (msg.m_notify.interrupts & BIT(timer_bit_no))
+      game_handle_timer_interrupt(game);
   }
 
-  if (mouse_disable_data_reporting() != 0) {
-    printf("Failed to disable mouse data reporting.\n");
-    result = 1;
-  }
-
-  if (mouse_unsubscribe_int() != 0) {
-    printf("Failed to unsubscribe mouse interrupts.\n");
-    result = 1;
-  }
-
-  if (keyboard_unsubscribe_int() != 0) {
-    printf("Failed to unsubscribe keyboard interrupts.\n");
-    result = 1;
-  }
-
-  if (timer_unsubscribe_int() != 0) {
-    printf("Failed to unsubscribe timer interrupts.\n");
-    result = 1;
-  }
+  if (game_disable_mouse() != 0) result = 1;
+  if (game_unsubscribe_devices() != 0) result = 1;
 
   return result;
 }
