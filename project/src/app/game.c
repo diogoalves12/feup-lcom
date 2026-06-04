@@ -22,6 +22,8 @@
 #include "player.h"
 #include "player_view.h"
 #include "renderer.h"
+#include "match_log.h"
+#include "log_screen.h"
 
 typedef struct {
   GameState        state;
@@ -41,6 +43,8 @@ typedef struct {
   PlayerViewAssets player_assets;
   bool             restart_requested;
   ArenaDifficulty  selected_difficulty;
+  MatchLog         match_log;
+  LogScreenState   log_screen;
 } Game;
 
 static int  game_setup(Game *game);
@@ -67,6 +71,7 @@ static void state_menu_update(Game *game);
 static void state_playing_update(Game *game);
 static void state_paused_update(Game *game);
 static void state_game_over_update(Game *game);
+static void state_log_update(Game *game);
 
 static int  render_playing(const Game *game);
 static int  render_paused(const Game *game);
@@ -137,6 +142,11 @@ static int game_setup(Game *game) {
   if (menu_state_load_assets(&game->menu) != 0)
     printf("menu_state_load_assets failed, using fallback rendering.\n");
 
+  match_log_init(&game->match_log);
+  log_screen_init(&game->log_screen);
+  if (log_screen_load_assets(&game->log_screen) != 0)
+    printf("log_screen_load_assets failed, using fallback rendering.\n");
+
   return 0;
 }
 
@@ -145,6 +155,7 @@ static int game_shutdown(Game *game) {
   pause_menu_state_destroy_assets(&game->pause_menu);
   game_over_state_destroy_assets(&game->game_over);
   player_view_destroy_assets(&game->player_assets);
+  log_screen_destroy_assets(&game->log_screen);
   if (renderer_shutdown() != 0) {
     printf("renderer_shutdown failed.\n");
     return 1;
@@ -182,6 +193,10 @@ static void game_apply_transition(Game *game, GameState next) {
     case GAME_STATE_GAME_OVER:
       game->game_over.selection = GAME_OVER_SEL_RESTART;
       game->game_over.prev_lb = game->mouse.move_forward;
+      match_log_add(&game->match_log, game->game_over.winner);
+      break;
+    case GAME_STATE_LOG:
+      game->log_screen.prev_lb = game->mouse.move_forward;
       break;
     default:
       break;
@@ -276,6 +291,8 @@ static void game_process_mouse_byte(Game *game, uint8_t byte) {
         pause_menu_state_move_cursor(&game->pause_menu, pkt.delta_x, pkt.delta_y);
       else if (game->state == GAME_STATE_GAME_OVER)
         game_over_state_move_cursor(&game->game_over, pkt.delta_x, pkt.delta_y);
+      else if (game->state == GAME_STATE_LOG)
+        log_screen_move_cursor(&game->log_screen, pkt.delta_x, pkt.delta_y);
     }
   }
 }
@@ -342,6 +359,7 @@ static void game_update(Game *game) {
     case GAME_STATE_PLAYING:   state_playing_update(game);   break;
     case GAME_STATE_PAUSED:    state_paused_update(game);    break;
     case GAME_STATE_GAME_OVER: state_game_over_update(game); break;
+    case GAME_STATE_LOG:       state_log_update(game);       break;
     case GAME_STATE_EXIT:      break;
   }
 }
@@ -373,6 +391,12 @@ static void game_render(Game *game) {
         result = 1;
       }
       break;
+    case GAME_STATE_LOG:
+      if (log_screen_render(&game->log_screen, &game->match_log) != 0) {
+        printf("log_screen_render failed.\n");
+        result = 1;
+      }
+      break;
     default: break;
   }
   if (result != 0) game->state = GAME_STATE_EXIT;
@@ -386,6 +410,8 @@ static void game_tick(Game *game) {
     pause_menu_state_apply_mouse(&game->pause_menu, &game->mouse, &game->actions);
   else if (game->state == GAME_STATE_GAME_OVER)
     game_over_state_apply_mouse(&game->game_over, &game->mouse, &game->actions);
+  else if (game->state == GAME_STATE_LOG)
+    log_screen_apply_mouse(&game->log_screen, &game->mouse, &game->actions);
   GameState state_before = game->state;
   game_update(game);
   if (game->state == state_before) game_render(game);
@@ -432,6 +458,12 @@ static void state_paused_update(Game *game) {
 static void state_game_over_update(Game *game) {
   GameState next = game->state;
   game_over_state_update(&game->game_over, &game->actions, &next);
+  game_apply_transition(game, next);
+}
+
+static void state_log_update(Game *game) {
+  GameState next = game->state;
+  log_screen_update(&game->log_screen, &game->actions, &next);
   game_apply_transition(game, next);
 }
 

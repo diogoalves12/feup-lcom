@@ -12,6 +12,7 @@
 #include "xpm/cursor/pointer_b_shaded.xpm"
 #include "xpm/text/start.xpm"
 #include "xpm/text/difficulty.xpm"
+#include "xpm/log/log.xpm"
 #include "xpm/text/select_difficulty.xpm"
 #include "xpm/text/easy.xpm"
 #include "xpm/text/medium.xpm"
@@ -25,9 +26,10 @@
 #define MENU_BTN_W  560
 #define MENU_BTN_H   90
 #define MENU_BTN_X  120
-#define MENU_START_Y      145
-#define MENU_DIFFICULTY_Y 255
-#define MENU_EXIT_Y       365
+#define MENU_START_Y      100
+#define MENU_DIFFICULTY_Y 205
+#define MENU_LOG_Y        310
+#define MENU_EXIT_Y       415
 #define DIFF_TITLE_Y   60
 #define DIFF_EASY_Y    135
 #define DIFF_MEDIUM_Y  240
@@ -44,6 +46,7 @@ void menu_state_init(MenuState *menu) {
   sprite_init(&menu->button_selected);
   sprite_init(&menu->start_text);
   sprite_init(&menu->difficulty_text);
+  sprite_init(&menu->log_text);
   sprite_init(&menu->exit_text);
   sprite_init(&menu->select_diff_title);
   sprite_init(&menu->easy_text);
@@ -64,6 +67,7 @@ int menu_state_load_assets(MenuState *menu) {
   if (sprite_load(&menu->button_selected, button_red_wide) != 0) { menu_state_destroy_assets(menu); return 1; }
   if (sprite_load(&menu->start_text, start) != 0) { menu_state_destroy_assets(menu); return 1; }
   if (sprite_load(&menu->difficulty_text, difficulty) != 0) { menu_state_destroy_assets(menu); return 1; }
+  if (sprite_load(&menu->log_text, log_xpm) != 0) { menu_state_destroy_assets(menu); return 1; }
   if (sprite_load(&menu->exit_text, exit_label_xpm) != 0) { menu_state_destroy_assets(menu); return 1; }
   if (sprite_load(&menu->select_diff_title, select_difficulty) != 0) { menu_state_destroy_assets(menu); return 1; }
   if (sprite_load(&menu->easy_text, easy) != 0) { menu_state_destroy_assets(menu); return 1; }
@@ -82,6 +86,7 @@ void menu_state_destroy_assets(MenuState *menu) {
   sprite_destroy(&menu->button_selected);
   sprite_destroy(&menu->start_text);
   sprite_destroy(&menu->difficulty_text);
+  sprite_destroy(&menu->log_text);
   sprite_destroy(&menu->exit_text);
   sprite_destroy(&menu->select_diff_title);
   sprite_destroy(&menu->easy_text);
@@ -109,6 +114,7 @@ static void menu_state_update_hover(MenuState *menu) {
   if (menu->screen == MENU_SCREEN_MAIN) {
     if (cy >= MENU_START_Y && cy < MENU_START_Y + MENU_BTN_H) menu->selection = MENU_SEL_START;
     else if (cy >= MENU_DIFFICULTY_Y && cy < MENU_DIFFICULTY_Y + MENU_BTN_H) menu->selection = MENU_SEL_DIFFICULTY;
+    else if (cy >= MENU_LOG_Y && cy < MENU_LOG_Y + MENU_BTN_H) menu->selection = MENU_SEL_LOG;
     else if (cy >= MENU_EXIT_Y && cy < MENU_EXIT_Y + MENU_BTN_H) menu->selection = MENU_SEL_EXIT;
   } else {
     if (cy >= DIFF_EASY_Y && cy < DIFF_EASY_Y + MENU_BTN_H) menu->diff_selection = MENU_DIFF_SEL_EASY;
@@ -162,6 +168,7 @@ void menu_state_update(MenuState *menu, const GameInputActions *actions, GameSta
       switch (menu->selection) {
         case MENU_SEL_START: *next = GAME_STATE_PLAYING; break;
         case MENU_SEL_DIFFICULTY: menu->screen = MENU_SCREEN_DIFFICULTY; break;
+        case MENU_SEL_LOG: *next = GAME_STATE_LOG; break;
         case MENU_SEL_EXIT: *next = GAME_STATE_EXIT; break;
       }
     } else if (actions->back) {
@@ -219,6 +226,7 @@ static int render_main_screen_sprites(const MenuState *menu) {
 
   if (draw_button(menu, menu->selection == MENU_SEL_START, &menu->start_text, MENU_START_Y) != 0) return 1;
   if (draw_button(menu, menu->selection == MENU_SEL_DIFFICULTY, &menu->difficulty_text, MENU_DIFFICULTY_Y) != 0) return 1;
+  if (draw_button(menu, menu->selection == MENU_SEL_LOG, &menu->log_text, MENU_LOG_Y) != 0) return 1;
   if (draw_button(menu, menu->selection == MENU_SEL_EXIT, &menu->exit_text, MENU_EXIT_Y) != 0) return 1;
 
   sprite_draw_clipped(&menu->cursor, menu->cursor_x, menu->cursor_y);
@@ -250,6 +258,8 @@ static int render_main_screen_fallback(const MenuState *menu) {
         menu->selection == MENU_SEL_START ? MENU_SELECTED_COLOR : MENU_OPTION_COLOR) != 0) return 1;
   if (renderer_draw_rectangle(MENU_BTN_X, MENU_DIFFICULTY_Y, MENU_BTN_W, MENU_BTN_H,
         menu->selection == MENU_SEL_DIFFICULTY ? MENU_SELECTED_COLOR : MENU_OPTION_COLOR) != 0) return 1;
+  if (renderer_draw_rectangle(MENU_BTN_X, MENU_LOG_Y, MENU_BTN_W, MENU_BTN_H,
+        menu->selection == MENU_SEL_LOG ? MENU_SELECTED_COLOR : MENU_OPTION_COLOR) != 0) return 1;
   if (renderer_draw_rectangle(MENU_BTN_X, MENU_EXIT_Y, MENU_BTN_W, MENU_BTN_H,
         menu->selection == MENU_SEL_EXIT ? MENU_SELECTED_COLOR : MENU_OPTION_COLOR) != 0) return 1;
 

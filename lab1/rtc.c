@@ -13,6 +13,9 @@
 #define RTC_DATA_REG 0x71
 #define RTC_REG_A 0x0A
 #define RTC_REG_B 0x0B
+#define RTC_REG_SECONDS 0x00
+#define RTC_REG_MINUTES 0x02
+#define RTC_REG_HOURS 0x04
 #define RTC_REG_DAY 0x07
 #define RTC_REG_MONTH 0x08
 #define RTC_REG_YEAR 0x09
@@ -59,6 +62,37 @@ int rtc_read_date(rtc_date *date) {
   date->day = day_raw;
   date->month = month_raw;
   date->year = year_raw;
+
+  return 0;
+}
+
+int rtc_read_time(rtc_time *time) {
+  if (time == NULL) return -1;
+
+  uint8_t reg_a;
+  do {
+    if (rtc_read_reg(RTC_REG_A, &reg_a)) return -1;
+    if (reg_a & RTC_UIP_MSK) tickdelay(micros_to_ticks(244));
+  } while (reg_a & RTC_UIP_MSK);
+
+  uint8_t reg_b;
+  if (rtc_read_reg(RTC_REG_B, &reg_b)) return -1;
+  bool binary_mode = reg_b & RTC_DM_MSK;
+
+  uint8_t sec_raw, min_raw, hr_raw;
+  if (rtc_read_reg(RTC_REG_SECONDS, &sec_raw)) return -1;
+  if (rtc_read_reg(RTC_REG_MINUTES, &min_raw)) return -1;
+  if (rtc_read_reg(RTC_REG_HOURS, &hr_raw)) return -1;
+
+  if (!binary_mode) {
+    sec_raw = (uint8_t)bcd_to_bin(sec_raw);
+    min_raw = (uint8_t)bcd_to_bin(min_raw);
+    hr_raw = (uint8_t)bcd_to_bin(hr_raw);
+  }
+
+  time->seconds = sec_raw;
+  time->minutes = min_raw;
+  time->hours = hr_raw;
 
   return 0;
 }
