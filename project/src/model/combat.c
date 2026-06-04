@@ -25,7 +25,7 @@ static bool point_inside_player(int px, int py, const Player *player) {
   int hitbox_top = player->position.y - half_height - COMBAT_AIM_TOLERANCE;
   int hitbox_bottom = player->position.y + half_height - 1 + COMBAT_AIM_TOLERANCE;
 
-  return px >= hitbox_left && px <= hitbox_right && py >= hitbox_top  && py <= hitbox_bottom;
+  return px >= hitbox_left && px <= hitbox_right && py >= hitbox_top && py <= hitbox_bottom;
 }
 
 bool combat_try_shoot(CombatState *combat, int shooter_num, const Player *shooter, Player *target, const Arena *arena, uint32_t frame_counter) {
@@ -80,16 +80,16 @@ bool combat_try_shoot(CombatState *combat, int shooter_num, const Player *shoote
     travelled_distance += COMBAT_RAY_STEP;
   }
 
-  combat->last_shot.active         = true;
-  combat->last_shot.start.x        = (int) ((float) shooter->position.x + direction_x * (shooter_half_width + 1.0f));
-  combat->last_shot.start.y        = (int) ((float) shooter->position.y + direction_y * (shooter_half_width + 1.0f));
-  combat->last_shot.end.x          = end_x;
-  combat->last_shot.end.y          = end_y;
-  combat->last_shot.angle          = shooter->angle;
-  combat->last_shot.shooter_num    = shooter_num;
-  combat->last_shot.hit            = hit;
-  combat->last_shot.start_frame    = frame_counter;
-  combat->last_shot.expire_frame   = frame_counter + COMBAT_SHOT_EFFECT_FRAMES;
+  combat->last_shot.active = true;
+  combat->last_shot.start.x = (int) ((float) shooter->position.x + direction_x * (shooter_half_width + 1.0f));
+  combat->last_shot.start.y = (int) ((float) shooter->position.y + direction_y * (shooter_half_width + 1.0f));
+  combat->last_shot.end.x = end_x;
+  combat->last_shot.end.y = end_y;
+  combat->last_shot.angle = shooter->angle;
+  combat->last_shot.shooter_num = shooter_num;
+  combat->last_shot.hit = hit;
+  combat->last_shot.start_frame = frame_counter;
+  combat->last_shot.expire_frame = frame_counter + COMBAT_SHOT_EFFECT_FRAMES;
 
   return hit;
 }

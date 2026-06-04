@@ -9,7 +9,7 @@ static void add_rect(Arena *arena, Rect rect) {
 }
 
 static void apply_easy(Arena *arena) {
-  add_rect(arena, (Rect) {6,  10, 2, 2});
+  add_rect(arena, (Rect) {6, 10, 2, 2});
   add_rect(arena, (Rect) {22, 10, 2, 2});
   add_rect(arena, (Rect) {12, 19, 4, 1});
   add_rect(arena, (Rect) {17, 19, 4, 1});
@@ -18,24 +18,24 @@ static void apply_easy(Arena *arena) {
 }
 
 static void apply_medium(Arena *arena) {
-  add_rect(arena, (Rect) {5,  8,  3, 2});
-  add_rect(arena, (Rect) {23, 8,  3, 2});
-  add_rect(arena, (Rect) {8,  17, 4, 1});
+  add_rect(arena, (Rect) {5, 8, 3, 2});
+  add_rect(arena, (Rect) {23, 8, 3, 2});
+  add_rect(arena, (Rect) {8, 17, 4, 1});
   add_rect(arena, (Rect) {21, 17, 4, 1});
   add_rect(arena, (Rect) {13, 14, 2, 2});
   add_rect(arena, (Rect) {15, 25, 2, 2});
-  add_rect(arena, (Rect) {7,  29, 2, 2});
+  add_rect(arena, (Rect) {7, 29, 2, 2});
   add_rect(arena, (Rect) {21, 29, 2, 2});
-  add_rect(arena, (Rect) {11, 5,  1, 2});
-  add_rect(arena, (Rect) {17, 5,  1, 2});
+  add_rect(arena, (Rect) {11, 5, 1, 2});
+  add_rect(arena, (Rect) {17, 5, 1, 2});
 }
 
 static void apply_hard(Arena *arena) {
-  add_rect(arena, (Rect) {4,  7,  3, 2});
-  add_rect(arena, (Rect) {24, 7,  3, 2});
-  add_rect(arena, (Rect) {7,  14, 4, 1});
+  add_rect(arena, (Rect) {4, 7, 3, 2});
+  add_rect(arena, (Rect) {24, 7, 3, 2});
+  add_rect(arena, (Rect) {7, 14, 4, 1});
   add_rect(arena, (Rect) {22, 14, 4, 1});
-  add_rect(arena, (Rect) {5,  22, 2, 2});
+  add_rect(arena, (Rect) {5, 22, 2, 2});
   add_rect(arena, (Rect) {23, 22, 2, 2});
   add_rect(arena, (Rect) {12, 11, 1, 2});
   add_rect(arena, (Rect) {16, 11, 1, 2});
@@ -43,7 +43,7 @@ static void apply_hard(Arena *arena) {
   add_rect(arena, (Rect) {17, 18, 1, 2});
   add_rect(arena, (Rect) {12, 28, 3, 1});
   add_rect(arena, (Rect) {17, 28, 3, 1});
-  add_rect(arena, (Rect) {9,  33, 2, 2});
+  add_rect(arena, (Rect) {9, 33, 2, 2});
   add_rect(arena, (Rect) {19, 33, 2, 2});
 }
 

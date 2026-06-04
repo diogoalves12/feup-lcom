@@ -10,11 +10,11 @@
 
 void sprite_init(Sprite *sprite) {
   if (sprite == NULL) return;
-  sprite->width             = 0;
-  sprite->height            = 0;
-  sprite->pixels            = NULL;
+  sprite->width = 0;
+  sprite->height = 0;
+  sprite->pixels = NULL;
   sprite->transparent_color = 0;
-  sprite->loaded            = false;
+  sprite->loaded = false;
 }
 
 void sprite_destroy(Sprite *sprite) {
@@ -23,10 +23,10 @@ void sprite_destroy(Sprite *sprite) {
     free(sprite->pixels);
     sprite->pixels = NULL;
   }
-  sprite->width             = 0;
-  sprite->height            = 0;
+  sprite->width = 0;
+  sprite->height = 0;
   sprite->transparent_color = 0;
-  sprite->loaded            = false;
+  sprite->loaded = false;
 }
 
 int sprite_load(Sprite *sprite, xpm_map_t xpm) {
@@ -36,11 +36,11 @@ int sprite_load(Sprite *sprite, xpm_map_t xpm) {
   xpm_image_t img;
   uint8_t *pixels = xpm_load(xpm, type, &img);
   if (pixels == NULL) return 1;
-  sprite->width             = img.width;
-  sprite->height            = img.height;
-  sprite->pixels            = pixels;
+  sprite->width = img.width;
+  sprite->height = img.height;
+  sprite->pixels = pixels;
   sprite->transparent_color = xpm_transparency_color(type);
-  sprite->loaded            = true;
+  sprite->loaded = true;
   return 0;
 }
 
@@ -85,7 +85,7 @@ int sprite_draw_clipped(const Sprite *sprite, int16_t x, int16_t y) {
 int sprite_draw_rotated(const Sprite *sprite, int cx, int cy, float angle) {
   if (sprite == NULL || !sprite->loaded || sprite->pixels == NULL) return 1;
 
-  int hw = (int)sprite->width  / 2;
+  int hw = (int)sprite->width / 2;
   int hh = (int)sprite->height / 2;
 
   float cos_a = cosf(angle);

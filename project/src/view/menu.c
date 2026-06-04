@@ -36,9 +36,9 @@
 
 void menu_state_init(MenuState *menu) {
   if (menu == NULL) return;
-  menu->screen              = MENU_SCREEN_MAIN;
-  menu->selection           = MENU_SEL_START;
-  menu->diff_selection      = MENU_DIFF_SEL_MEDIUM;
+  menu->screen = MENU_SCREEN_MAIN;
+  menu->selection = MENU_SEL_START;
+  menu->diff_selection = MENU_DIFF_SEL_MEDIUM;
   menu->selected_difficulty = DEFAULT_ARENA_DIFFICULTY;
   sprite_init(&menu->button);
   sprite_init(&menu->button_selected);
@@ -51,26 +51,26 @@ void menu_state_init(MenuState *menu) {
   sprite_init(&menu->hard_text);
   sprite_init(&menu->back_text);
   sprite_init(&menu->cursor);
-  menu->cursor_x      = SCREEN_WIDTH  / 2;
-  menu->cursor_y      = SCREEN_HEIGHT / 2;
-  menu->prev_lb       = false;
+  menu->cursor_x = SCREEN_WIDTH / 2;
+  menu->cursor_y = SCREEN_HEIGHT / 2;
+  menu->prev_lb = false;
   menu->assets_loaded = false;
 }
 
 int menu_state_load_assets(MenuState *menu) {
   if (menu == NULL) return 1;
 
-  if (sprite_load(&menu->button,            button_gray_wide)   != 0) { menu_state_destroy_assets(menu); return 1; }
-  if (sprite_load(&menu->button_selected,   button_red_wide)    != 0) { menu_state_destroy_assets(menu); return 1; }
-  if (sprite_load(&menu->start_text,        start)              != 0) { menu_state_destroy_assets(menu); return 1; }
-  if (sprite_load(&menu->difficulty_text,   difficulty)         != 0) { menu_state_destroy_assets(menu); return 1; }
-  if (sprite_load(&menu->exit_text,         exit_label_xpm)     != 0) { menu_state_destroy_assets(menu); return 1; }
-  if (sprite_load(&menu->select_diff_title, select_difficulty)  != 0) { menu_state_destroy_assets(menu); return 1; }
-  if (sprite_load(&menu->easy_text,         easy)               != 0) { menu_state_destroy_assets(menu); return 1; }
-  if (sprite_load(&menu->medium_text,       medium)             != 0) { menu_state_destroy_assets(menu); return 1; }
-  if (sprite_load(&menu->hard_text,         hard)               != 0) { menu_state_destroy_assets(menu); return 1; }
-  if (sprite_load(&menu->back_text,         back)               != 0) { menu_state_destroy_assets(menu); return 1; }
-  if (sprite_load(&menu->cursor,            pointer_b_shaded_xpm) != 0) { menu_state_destroy_assets(menu); return 1; }
+  if (sprite_load(&menu->button, button_gray_wide) != 0) { menu_state_destroy_assets(menu); return 1; }
+  if (sprite_load(&menu->button_selected, button_red_wide) != 0) { menu_state_destroy_assets(menu); return 1; }
+  if (sprite_load(&menu->start_text, start) != 0) { menu_state_destroy_assets(menu); return 1; }
+  if (sprite_load(&menu->difficulty_text, difficulty) != 0) { menu_state_destroy_assets(menu); return 1; }
+  if (sprite_load(&menu->exit_text, exit_label_xpm) != 0) { menu_state_destroy_assets(menu); return 1; }
+  if (sprite_load(&menu->select_diff_title, select_difficulty) != 0) { menu_state_destroy_assets(menu); return 1; }
+  if (sprite_load(&menu->easy_text, easy) != 0) { menu_state_destroy_assets(menu); return 1; }
+  if (sprite_load(&menu->medium_text, medium) != 0) { menu_state_destroy_assets(menu); return 1; }
+  if (sprite_load(&menu->hard_text, hard) != 0) { menu_state_destroy_assets(menu); return 1; }
+  if (sprite_load(&menu->back_text, back) != 0) { menu_state_destroy_assets(menu); return 1; }
+  if (sprite_load(&menu->cursor, pointer_b_shaded_xpm) != 0) { menu_state_destroy_assets(menu); return 1; }
 
   menu->assets_loaded = true;
   return 0;
@@ -94,10 +94,10 @@ void menu_state_destroy_assets(MenuState *menu) {
 
 void menu_state_reset(MenuState *menu) {
   if (menu == NULL) return;
-  menu->screen         = MENU_SCREEN_MAIN;
-  menu->selection      = MENU_SEL_START;
+  menu->screen = MENU_SCREEN_MAIN;
+  menu->selection = MENU_SEL_START;
   menu->diff_selection = (MenuDiffSelection)menu->selected_difficulty;
-  menu->prev_lb        = false;
+  menu->prev_lb = false;
 }
 
 static void menu_state_update_hover(MenuState *menu) {
@@ -107,23 +107,23 @@ static void menu_state_update_hover(MenuState *menu) {
   if (cx < MENU_BTN_X || cx >= MENU_BTN_X + MENU_BTN_W) return;
 
   if (menu->screen == MENU_SCREEN_MAIN) {
-    if      (cy >= MENU_START_Y      && cy < MENU_START_Y      + MENU_BTN_H) menu->selection = MENU_SEL_START;
+    if (cy >= MENU_START_Y && cy < MENU_START_Y + MENU_BTN_H) menu->selection = MENU_SEL_START;
     else if (cy >= MENU_DIFFICULTY_Y && cy < MENU_DIFFICULTY_Y + MENU_BTN_H) menu->selection = MENU_SEL_DIFFICULTY;
-    else if (cy >= MENU_EXIT_Y       && cy < MENU_EXIT_Y       + MENU_BTN_H) menu->selection = MENU_SEL_EXIT;
+    else if (cy >= MENU_EXIT_Y && cy < MENU_EXIT_Y + MENU_BTN_H) menu->selection = MENU_SEL_EXIT;
   } else {
-    if      (cy >= DIFF_EASY_Y   && cy < DIFF_EASY_Y   + MENU_BTN_H) menu->diff_selection = MENU_DIFF_SEL_EASY;
+    if (cy >= DIFF_EASY_Y && cy < DIFF_EASY_Y + MENU_BTN_H) menu->diff_selection = MENU_DIFF_SEL_EASY;
     else if (cy >= DIFF_MEDIUM_Y && cy < DIFF_MEDIUM_Y + MENU_BTN_H) menu->diff_selection = MENU_DIFF_SEL_MEDIUM;
-    else if (cy >= DIFF_HARD_Y   && cy < DIFF_HARD_Y   + MENU_BTN_H) menu->diff_selection = MENU_DIFF_SEL_HARD;
-    else if (cy >= DIFF_BACK_Y   && cy < DIFF_BACK_Y   + MENU_BTN_H) menu->diff_selection = MENU_DIFF_SEL_BACK;
+    else if (cy >= DIFF_HARD_Y && cy < DIFF_HARD_Y + MENU_BTN_H) menu->diff_selection = MENU_DIFF_SEL_HARD;
+    else if (cy >= DIFF_BACK_Y && cy < DIFF_BACK_Y + MENU_BTN_H) menu->diff_selection = MENU_DIFF_SEL_BACK;
   }
 }
 
 void menu_state_move_cursor(MenuState *menu, int16_t dx, int16_t dy) {
   if (menu == NULL) return;
 
-  int cur_w = (menu->cursor.loaded && menu->cursor.width  > 0) ? (int)menu->cursor.width  : 1;
+  int cur_w = (menu->cursor.loaded && menu->cursor.width > 0) ? (int)menu->cursor.width : 1;
   int cur_h = (menu->cursor.loaded && menu->cursor.height > 0) ? (int)menu->cursor.height : 1;
-  int max_x = SCREEN_WIDTH  - cur_w;
+  int max_x = SCREEN_WIDTH - cur_w;
   int max_y = SCREEN_HEIGHT - cur_h;
 
   int candidate_x = (int)menu->cursor_x + (int)dx;
@@ -160,9 +160,9 @@ void menu_state_update(MenuState *menu, const GameInputActions *actions, GameSta
 
     if (actions->confirm) {
       switch (menu->selection) {
-        case MENU_SEL_START:      *next = GAME_STATE_PLAYING;           break;
+        case MENU_SEL_START: *next = GAME_STATE_PLAYING; break;
         case MENU_SEL_DIFFICULTY: menu->screen = MENU_SCREEN_DIFFICULTY; break;
-        case MENU_SEL_EXIT:       *next = GAME_STATE_EXIT;              break;
+        case MENU_SEL_EXIT: *next = GAME_STATE_EXIT; break;
       }
     } else if (actions->back) {
       *next = GAME_STATE_EXIT;
@@ -200,12 +200,12 @@ void menu_state_update(MenuState *menu, const GameInputActions *actions, GameSta
 static int draw_button(const MenuState *menu, bool selected,
                        const Sprite *label, uint16_t slot_y) {
   const Sprite *btn = selected ? &menu->button_selected : &menu->button;
-  uint16_t bx = (uint16_t)((SCREEN_WIDTH  - (int)btn->width)  / 2);
+  uint16_t bx = (uint16_t)((SCREEN_WIDTH - (int)btn->width) / 2);
   uint16_t by = (uint16_t)(slot_y + ((int)MENU_BTN_H - (int)btn->height) / 2);
   if (sprite_draw(btn, bx, by) != 0) return 1;
 
   if (label->loaded) {
-    int lx = ((int)SCREEN_WIDTH - (int)label->width)  / 2;
+    int lx = ((int)SCREEN_WIDTH - (int)label->width) / 2;
     int ly = (int)slot_y + ((int)MENU_BTN_H - (int)label->height) / 2;
     if (lx < 0) lx = 0;
     if (ly < 0) ly = 0;
@@ -217,9 +217,9 @@ static int draw_button(const MenuState *menu, bool selected,
 static int render_main_screen_sprites(const MenuState *menu) {
   if (renderer_clear(MENU_BG_COLOR) != 0) return 1;
 
-  if (draw_button(menu, menu->selection == MENU_SEL_START,      &menu->start_text,      MENU_START_Y)      != 0) return 1;
+  if (draw_button(menu, menu->selection == MENU_SEL_START, &menu->start_text, MENU_START_Y) != 0) return 1;
   if (draw_button(menu, menu->selection == MENU_SEL_DIFFICULTY, &menu->difficulty_text, MENU_DIFFICULTY_Y) != 0) return 1;
-  if (draw_button(menu, menu->selection == MENU_SEL_EXIT,       &menu->exit_text,       MENU_EXIT_Y)       != 0) return 1;
+  if (draw_button(menu, menu->selection == MENU_SEL_EXIT, &menu->exit_text, MENU_EXIT_Y) != 0) return 1;
 
   sprite_draw_clipped(&menu->cursor, menu->cursor_x, menu->cursor_y);
   return renderer_present();
@@ -234,10 +234,10 @@ static int render_difficulty_screen_sprites(const MenuState *menu) {
     if (sprite_draw(&menu->select_diff_title, (uint16_t)tx, DIFF_TITLE_Y) != 0) return 1;
   }
 
-  if (draw_button(menu, menu->diff_selection == MENU_DIFF_SEL_EASY,   &menu->easy_text,   DIFF_EASY_Y)   != 0) return 1;
+  if (draw_button(menu, menu->diff_selection == MENU_DIFF_SEL_EASY, &menu->easy_text, DIFF_EASY_Y) != 0) return 1;
   if (draw_button(menu, menu->diff_selection == MENU_DIFF_SEL_MEDIUM, &menu->medium_text, DIFF_MEDIUM_Y) != 0) return 1;
-  if (draw_button(menu, menu->diff_selection == MENU_DIFF_SEL_HARD,   &menu->hard_text,   DIFF_HARD_Y)   != 0) return 1;
-  if (draw_button(menu, menu->diff_selection == MENU_DIFF_SEL_BACK,   &menu->back_text,   DIFF_BACK_Y)   != 0) return 1;
+  if (draw_button(menu, menu->diff_selection == MENU_DIFF_SEL_HARD, &menu->hard_text, DIFF_HARD_Y) != 0) return 1;
+  if (draw_button(menu, menu->diff_selection == MENU_DIFF_SEL_BACK, &menu->back_text, DIFF_BACK_Y) != 0) return 1;
 
   sprite_draw_clipped(&menu->cursor, menu->cursor_x, menu->cursor_y);
   return renderer_present();

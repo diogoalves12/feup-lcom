@@ -173,12 +173,15 @@ static void game_apply_transition(Game *game, GameState next) {
       break;
     case GAME_STATE_PAUSED:
       game->pause_menu.selection = PAUSE_SEL_CONTINUE;
+      game->pause_menu.prev_lb = game->mouse.move_forward;
+      pause_menu_state_reset_cursor(&game->pause_menu);
       break;
     case GAME_STATE_MENU:
       menu_state_reset(&game->menu);
       break;
     case GAME_STATE_GAME_OVER:
       game->game_over.selection = GAME_OVER_SEL_RESTART;
+      game->game_over.prev_lb = game->mouse.move_forward;
       break;
     default:
       break;
@@ -266,8 +269,14 @@ static void game_process_mouse_byte(Game *game, uint8_t byte) {
   if (mouse_sync_byte(byte, game->mouse_packet, &game->mouse_packet_idx)) {
     mouse_parse_packet_bytes(game->mouse_packet, &pkt);
     mouse_input_set(&game->mouse, pkt.lb, pkt.rb, pkt.mb);
-    if (game->state == GAME_STATE_MENU && !pkt.x_ov && !pkt.y_ov)
-      menu_state_move_cursor(&game->menu, pkt.delta_x, pkt.delta_y);
+    if (!pkt.x_ov && !pkt.y_ov) {
+      if (game->state == GAME_STATE_MENU)
+        menu_state_move_cursor(&game->menu, pkt.delta_x, pkt.delta_y);
+      else if (game->state == GAME_STATE_PAUSED)
+        pause_menu_state_move_cursor(&game->pause_menu, pkt.delta_x, pkt.delta_y);
+      else if (game->state == GAME_STATE_GAME_OVER)
+        game_over_state_move_cursor(&game->game_over, pkt.delta_x, pkt.delta_y);
+    }
   }
 }
 
@@ -373,6 +382,10 @@ static void game_tick(Game *game) {
   game_read_actions(game);
   if (game->state == GAME_STATE_MENU)
     menu_state_apply_mouse(&game->menu, &game->mouse, &game->actions);
+  else if (game->state == GAME_STATE_PAUSED)
+    pause_menu_state_apply_mouse(&game->pause_menu, &game->mouse, &game->actions);
+  else if (game->state == GAME_STATE_GAME_OVER)
+    game_over_state_apply_mouse(&game->game_over, &game->mouse, &game->actions);
   GameState state_before = game->state;
   game_update(game);
   if (game->state == state_before) game_render(game);
@@ -425,7 +438,7 @@ static void state_game_over_update(Game *game) {
 static void draw_shot_effect(const ShotEffect *shot, uint32_t frame_counter, const PlayerViewAssets *assets) {
   if (!shot->active || frame_counter >= shot->expire_frame) return;
 
-  uint32_t elapsed  = frame_counter - shot->start_frame;
+  uint32_t elapsed = frame_counter - shot->start_frame;
   uint32_t duration = shot->expire_frame - shot->start_frame;
   float progress = (float) elapsed / (float) duration;
   if (progress > 1.0f) progress = 1.0f;
