@@ -31,6 +31,7 @@ void player_init(Player *player, Position spawn, float angle, uint32_t color);
 bool player_is_alive(const Player *player);
 void player_kill(Player *player);
 void player_damage(Player *player, int damage);
+void player_heal(Player *player, int amount);
 void player_set_position(Player *player, Position position);
 void player_rotate(Player *player, float delta_angle);
 

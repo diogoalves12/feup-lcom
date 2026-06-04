@@ -1,0 +1,26 @@
+/* XPM */
+static xpm_row_t teleporter_0_xpm[] = {
+"20 20 2 1 ",
+"  c None",
+"b c #3060B0",
+"                    ",
+"                    ",
+"                    ",
+"                    ",
+"      bbbbbbbb      ",
+"     b        b     ",
+"    b          b    ",
+"   b            b   ",
+"   b            b   ",
+"  b      bb      b  ",
+"  b      bb      b  ",
+"   b            b   ",
+"   b            b   ",
+"    b          b    ",
+"     b        b     ",
+"      bbbbbbbb      ",
+"                    ",
+"                    ",
+"                    ",
+"                    "
+};

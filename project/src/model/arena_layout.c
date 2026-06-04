@@ -16,6 +16,11 @@ static void add_breakable_rect(Arena *arena, Rect rect) {
   }
 }
 
+static void add_teleporter_pair(Arena *arena, int a_row, int a_col, int b_row, int b_col) {
+  arena_set_teleporter(arena, a_row, a_col, TILE_TELEPORTER_A);
+  arena_set_teleporter(arena, b_row, b_col, TILE_TELEPORTER_B);
+}
+
 static void apply_easy(Arena *arena) {
   add_rect(arena, (Rect) {6, 10, 2, 2});
   add_rect(arena, (Rect) {22, 10, 2, 2});
@@ -40,6 +45,8 @@ static void apply_medium(Arena *arena) {
   add_breakable_rect(arena, (Rect) {14, 19, 2, 2});
   add_breakable_rect(arena, (Rect) {10, 10, 1, 2});
   add_breakable_rect(arena, (Rect) {19, 10, 1, 2});
+
+  add_teleporter_pair(arena, 4, 4, 25, 35);
 }
 
 static void apply_hard(Arena *arena) {
@@ -62,6 +69,8 @@ static void apply_hard(Arena *arena) {
   add_breakable_rect(arena, (Rect) {14, 23, 2, 2});
   add_breakable_rect(arena, (Rect) {8, 20, 2, 1});
   add_breakable_rect(arena, (Rect) {21, 20, 2, 1});
+
+  add_teleporter_pair(arena, 2, 20, 27, 20);
 }
 
 void arena_layout_apply(Arena *arena, ArenaDifficulty difficulty) {

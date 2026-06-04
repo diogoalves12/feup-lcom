@@ -17,6 +17,8 @@ typedef enum {
   TILE_FLOOR = 0,
   TILE_WALL,
   TILE_BREAKABLE_WALL,
+  TILE_TELEPORTER_A,
+  TILE_TELEPORTER_B,
   TILE_PLAYER1_SPAWN,
   TILE_PLAYER2_SPAWN
 } TileType;
@@ -39,12 +41,17 @@ typedef struct {
   ArenaTile tiles[ARENA_ROWS][ARENA_COLS];
   Position player1_spawn;
   Position player2_spawn;
+  Position teleporter_a;
+  Position teleporter_b;
+  bool     has_teleporter_a;
+  bool     has_teleporter_b;
 } Arena;
 
 int arena_init(Arena *arena, ArenaDifficulty difficulty);
 
 void arena_set_tile(Arena *arena, int row, int col, TileType type);
 void arena_set_breakable_wall(Arena *arena, int row, int col);
+void arena_set_teleporter(Arena *arena, int row, int col, TileType type);
 bool arena_damage_tile(Arena *arena, int row, int col, uint8_t damage);
 
 Position arena_get_player1_spawn(const Arena *arena);
@@ -54,5 +61,8 @@ TileType arena_get_tile_type(const Arena *arena, int row, int col);
 
 bool arena_is_wall_tile(TileType type);
 bool arena_is_breakable_wall_tile(TileType type);
+bool arena_is_teleporter_tile(TileType type);
+
+bool arena_get_teleporter_destination(const Arena *arena, TileType from, Position *destination);
 
 #endif

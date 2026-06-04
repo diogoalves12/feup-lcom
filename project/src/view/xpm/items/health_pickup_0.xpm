@@ -1,0 +1,26 @@
+/* XPM */
+static xpm_row_t health_pickup_0_xpm[] = {
+"20 20 2 1 ",
+"  c None",
+"R c #A02828",
+"                    ",
+"                    ",
+"                    ",
+"                    ",
+"        RRRR        ",
+"        RRRR        ",
+"        RRRR        ",
+"        RRRR        ",
+"    RRRRRRRRRRRR    ",
+"    RRRRRRRRRRRR    ",
+"    RRRRRRRRRRRR    ",
+"    RRRRRRRRRRRR    ",
+"        RRRR        ",
+"        RRRR        ",
+"        RRRR        ",
+"        RRRR        ",
+"                    ",
+"                    ",
+"                    ",
+"                    "
+};

@@ -33,6 +33,22 @@ void arena_set_breakable_wall(Arena *arena, int row, int col) {
   arena_set_tile(arena, row, col, TILE_BREAKABLE_WALL);
 }
 
+void arena_set_teleporter(Arena *arena, int row, int col, TileType type) {
+  if (arena == NULL || !inside_bounds(row, col)) return;
+  if (type != TILE_TELEPORTER_A && type != TILE_TELEPORTER_B) return;
+
+  arena_set_tile(arena, row, col, type);
+
+  Position center = tile_center(row, col);
+  if (type == TILE_TELEPORTER_A) {
+    arena->teleporter_a = center;
+    arena->has_teleporter_a = true;
+  } else {
+    arena->teleporter_b = center;
+    arena->has_teleporter_b = true;
+  }
+}
+
 bool arena_damage_tile(Arena *arena, int row, int col, uint8_t damage) {
   if (arena == NULL || !inside_bounds(row, col)) {
     return false;
@@ -87,6 +103,8 @@ int arena_init(Arena *arena, ArenaDifficulty difficulty) {
   }
 
   arena->difficulty = difficulty;
+  arena->has_teleporter_a = false;
+  arena->has_teleporter_b = false;
   clear_tiles(arena);
   add_borders(arena);
   arena_layout_apply(arena, difficulty);
@@ -125,4 +143,23 @@ bool arena_is_wall_tile(TileType type) {
 
 bool arena_is_breakable_wall_tile(TileType type) {
   return type == TILE_BREAKABLE_WALL;
+}
+
+bool arena_is_teleporter_tile(TileType type) {
+  return type == TILE_TELEPORTER_A || type == TILE_TELEPORTER_B;
+}
+
+bool arena_get_teleporter_destination(const Arena *arena, TileType from, Position *destination) {
+  if (arena == NULL || destination == NULL) return false;
+  if (!arena->has_teleporter_a || !arena->has_teleporter_b) return false;
+
+  if (from == TILE_TELEPORTER_A) {
+    *destination = arena->teleporter_b;
+    return true;
+  }
+  if (from == TILE_TELEPORTER_B) {
+    *destination = arena->teleporter_a;
+    return true;
+  }
+  return false;
 }
