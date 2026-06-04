@@ -6,6 +6,9 @@
 #define PROJECT_BG_COLOR    0x101010
 #define DOUBLE_BUFFER       1
 
+#define SCREEN_WIDTH        800
+#define SCREEN_HEIGHT       600
+
 #define PAUSE_BAR_COLOR     0xFFFF00
 #define PAUSE_BAR_HEIGHT    4
 

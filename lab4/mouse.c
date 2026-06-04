@@ -9,8 +9,22 @@ static int mouse_hook_id = MOUSE_IRQ;
 static uint8_t mouse_byte = 0;
 static bool mouse_error = false;
 
+static void mouse_drain_output_buffer(void) {
+  uint8_t status;
+  uint8_t data;
+
+  for (int i = 0; i < MAX_TRIES; i++) {
+    if (util_sys_inb(KBC_STAT_REG, &status) != 0) return;
+    if (!(status & KBC_OBF)) return;
+    if (!(status & KBC_AUX)) return;
+    util_sys_inb(KBC_OUT_BUF, &data);
+    tickdelay(micros_to_ticks(DELAY_US));
+  }
+}
+
 static int (mouse_read_ack)(uint8_t *ack) {
   uint8_t status;
+  uint8_t byte;
 
   if (ack == NULL) return -1;
 
@@ -18,10 +32,19 @@ static int (mouse_read_ack)(uint8_t *ack) {
     if (util_sys_inb(KBC_STAT_REG, &status) != 0) return -1;
 
     if (status & KBC_OBF) {
-      if (util_sys_inb(KBC_OUT_BUF, ack) != 0) return -1;
-      if ((status & (KBC_PARITY | KBC_TIMEOUT)) != 0) return -1;
-      if ((status & KBC_AUX) == 0) return -1;
-      return 0;
+      if (util_sys_inb(KBC_OUT_BUF, &byte) != 0) return -1;
+      if ((status & (KBC_PARITY | KBC_TIMEOUT)) != 0) {
+        tickdelay(micros_to_ticks(DELAY_US));
+        continue;
+      }
+      if (!(status & KBC_AUX)) {
+        tickdelay(micros_to_ticks(DELAY_US));
+        continue;
+      }
+      if (byte == MOUSE_ACK || byte == MOUSE_NACK || byte == MOUSE_ERROR) {
+        *ack = byte;
+        return 0;
+      }
     }
 
     tickdelay(micros_to_ticks(DELAY_US));
@@ -76,6 +99,7 @@ int (mouse_write_command)(uint8_t command) {
   uint8_t ack;
 
   for (int retry = 0; retry < MAX_COMMAND_RETRIES; retry++) {
+    mouse_drain_output_buffer();
     for (int i = 0; i < MAX_TRIES; i++) {
       if (util_sys_inb(KBC_STAT_REG, &status) != 0) return -1;
 

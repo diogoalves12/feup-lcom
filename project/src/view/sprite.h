@@ -17,6 +17,7 @@ typedef struct {
 void sprite_init(Sprite *sprite);
 int  sprite_load(Sprite *sprite, xpm_map_t xpm);
 int  sprite_draw(const Sprite *sprite, uint16_t x, uint16_t y);
+int  sprite_draw_clipped(const Sprite *sprite, int16_t x, int16_t y);
 void sprite_destroy(Sprite *sprite);
 
 #endif

@@ -2,11 +2,12 @@
 #define PROJECT_CONTROLLER_MOUSE_INPUT_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 typedef struct {
-  bool move_forward; /* left button  */
-  bool shoot;        /* right button */
-  bool action;       /* middle button */
+  bool move_forward;
+  bool shoot;
+  bool action;
 } MouseInput;
 
 void mouse_input_init(MouseInput *input);

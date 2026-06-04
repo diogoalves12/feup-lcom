@@ -258,6 +258,8 @@ static void game_handle_mouse_interrupt(Game *game) {
     if (mouse_sync_byte(byte, game->mouse_packet, &game->mouse_packet_idx)) {
       mouse_parse_packet_bytes(game->mouse_packet, &pkt);
       mouse_input_set(&game->mouse, pkt.lb, pkt.rb, pkt.mb);
+      if (game->state == GAME_STATE_MENU && !pkt.x_ov && !pkt.y_ov)
+        menu_state_move_cursor(&game->menu, pkt.delta_x, pkt.delta_y);
     }
   }
 }
@@ -362,6 +364,8 @@ static void game_render(Game *game) {
 
 static void game_tick(Game *game) {
   game_read_actions(game);
+  if (game->state == GAME_STATE_MENU)
+    menu_state_apply_mouse(&game->menu, &game->mouse, &game->actions);
   GameState state_before = game->state;
   game_update(game);
   if (game->state == state_before) game_render(game);
