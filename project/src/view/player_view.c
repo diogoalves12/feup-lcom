@@ -10,12 +10,18 @@
 #include "xpm/player/player2/soldier1_gun.xpm"
 #include "xpm/bullets/bullet_small.xpm"
 
-
-#define PLAYER_SPRITE_ANGLE_OFFSET 0.0f
-
-#define PLAYER_INDICATOR_RADIUS  10
-#define PLAYER_INDICATOR_SIZE     4
+#define PLAYER_INDICATOR_RADIUS 10
+#define PLAYER_INDICATOR_SIZE 4
 #define PLAYER_INDICATOR_COLOR 0xFFFFFF
+
+#define PLAYER_HUD_BLOCK_W 18
+#define PLAYER_HUD_BLOCK_H 12
+#define PLAYER_HUD_GAP 3
+#define PLAYER_HUD_PAD 4
+
+int player_view_health_bar_width(void) {
+  return PLAYER_DEFAULT_HEALTH * (PLAYER_HUD_BLOCK_W + PLAYER_HUD_GAP) - PLAYER_HUD_GAP + 2 * PLAYER_HUD_PAD;
+}
 
 int player_view_load_assets(PlayerViewAssets *assets) {
   if (assets == NULL) return 1;
@@ -60,7 +66,7 @@ int player_view_draw(const Player *player, const PlayerViewAssets *assets, int p
     if (sprite_draw_rotated(sprite,
                             player->position.x,
                             player->position.y,
-                            player->angle + PLAYER_SPRITE_ANGLE_OFFSET) != 0) return 1;
+                            player->angle) != 0) return 1;
   } else {
     int x = player->position.x - player->width  / 2;
     int y = player->position.y - player->height / 2;
@@ -74,9 +80,24 @@ int player_view_draw(const Player *player, const PlayerViewAssets *assets, int p
 }
 
 void player_view_draw_health_bar(const Player *player, int screen_x, int screen_y) {
-  if (player == NULL || !player->alive || player->health <= 0) return;
-  int hp_width  = 15;
-  int bar_width = player->health * hp_width;
-  int bar_height = 8;
-  renderer_draw_rectangle(screen_x, screen_y, bar_width, bar_height, player->color);
+  if (player == NULL) return;
+
+  int bg_w = player_view_health_bar_width();
+  int bg_h = PLAYER_HUD_BLOCK_H + 2 * PLAYER_HUD_PAD;
+
+  renderer_draw_rectangle((uint16_t) screen_x, (uint16_t) screen_y,
+                          (uint16_t) bg_w, (uint16_t) bg_h, 0x1A1A1A);
+
+  renderer_draw_hline((uint16_t) screen_x, (uint16_t) screen_y, (uint16_t) bg_w, 0x555555);
+  renderer_draw_hline((uint16_t) screen_x, (uint16_t)(screen_y + bg_h - 1), (uint16_t) bg_w, 0x555555);
+  renderer_draw_rectangle((uint16_t) screen_x, (uint16_t) screen_y, 1, (uint16_t) bg_h, 0x555555);
+  renderer_draw_rectangle((uint16_t)(screen_x + bg_w - 1), (uint16_t) screen_y, 1, (uint16_t) bg_h, 0x555555);
+
+  int current_health = (player->alive && player->health > 0) ? player->health : 0;
+  for (int i = 0; i < PLAYER_DEFAULT_HEALTH; i++) {
+    int bx    = screen_x + PLAYER_HUD_PAD + i * (PLAYER_HUD_BLOCK_W + PLAYER_HUD_GAP);
+    int by    = screen_y + PLAYER_HUD_PAD;
+    uint32_t color = (i < current_health) ? player->color : 0x333333;
+    renderer_draw_rectangle((uint16_t) bx, (uint16_t) by, PLAYER_HUD_BLOCK_W, PLAYER_HUD_BLOCK_H, color);
+  }
 }

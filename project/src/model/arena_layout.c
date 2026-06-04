@@ -8,8 +8,6 @@ static void add_rect(Arena *arena, Rect rect) {
   }
 }
 
-
-
 static void apply_easy(Arena *arena) {
   add_rect(arena, (Rect) {6,  10, 2, 2});
   add_rect(arena, (Rect) {22, 10, 2, 2});

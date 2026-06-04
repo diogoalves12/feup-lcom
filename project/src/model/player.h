@@ -32,10 +32,8 @@ bool player_is_alive(const Player *player);
 void player_kill(Player *player);
 void player_damage(Player *player, int damage);
 void player_set_position(Player *player, Position position);
-Position player_get_position(const Player *player);
 void player_rotate(Player *player, float delta_angle);
 
 Position player_get_forward_position(const Player *player, float distance);
-void player_move_forward(Player *player, float distance);
 
 #endif

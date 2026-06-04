@@ -54,14 +54,6 @@ void player_set_position(Player *player, Position position) {
   player->position = position;
 }
 
-Position player_get_position(const Player *player) {
-  if (player == NULL) {
-    return (Position) {0, 0};
-  }
-
-  return player->position;
-}
-
 void player_rotate(Player *player, float delta_angle) {
   if (player == NULL || !player->alive) {
     return;
@@ -93,10 +85,3 @@ Position player_get_forward_position(const Player *player, float distance) {
   return (Position) {player->position.x + dx, player->position.y + dy};
 }
 
-void player_move_forward(Player *player, float distance) {
-  if (player == NULL || !player->alive || distance <= 0.0f) {
-    return;
-  }
-
-  player->position = player_get_forward_position(player, distance);
-}

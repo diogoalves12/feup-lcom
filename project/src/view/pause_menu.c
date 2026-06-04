@@ -12,9 +12,6 @@
 #include "xpm/text/retry.xpm"
 #include "xpm/text/back.xpm"
 
-#define PAUSE_BG_OVERLAY     0x000000
-#define PAUSE_OVERLAY_ALPHA  0x60
-
 #define PAUSE_OPTION_COLOR   0x404040
 #define PAUSE_SELECTED_COLOR 0xAA0000
 
