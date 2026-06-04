@@ -124,8 +124,9 @@ static int game_setup(Game *game) {
   game_input_actions_init(&game->actions);
   game->frame_counter = 0;
   game->restart_requested = false;
-  game->game_over.winner = 0;
-  game->game_over.selection = GAME_OVER_SEL_RESTART;
+  game_over_state_init(&game->game_over, 0);
+  if (game_over_state_load_assets(&game->game_over) != 0)
+    printf("game_over_state_load_assets failed, using fallback rendering.\n");
 
   pause_menu_state_init(&game->pause_menu);
   if (pause_menu_state_load_assets(&game->pause_menu) != 0)
@@ -146,6 +147,7 @@ static int game_setup(Game *game) {
 static int game_shutdown(Game *game) {
   menu_state_destroy_assets(&game->menu);
   pause_menu_state_destroy_assets(&game->pause_menu);
+  game_over_state_destroy_assets(&game->game_over);
   if (renderer_shutdown() != 0) {
     printf("renderer_shutdown failed.\n");
     return 1;
@@ -181,7 +183,7 @@ static void game_apply_transition(Game *game, GameState next) {
       menu_state_reset(&game->menu);
       break;
     case GAME_STATE_GAME_OVER:
-      game_over_state_init(&game->game_over, game->game_over.winner);
+      game->game_over.selection = GAME_OVER_SEL_RESTART;
       break;
     default:
       break;

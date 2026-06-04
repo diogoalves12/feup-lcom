@@ -1,5 +1,5 @@
 /* XPM */
-static char *player1_wins[] = {
+static xpm_row_t const player1_wins_xpm[] = {
 /* columns rows colors chars-per-pixel */
 "584 73 2 1 ",
 "  c None",
