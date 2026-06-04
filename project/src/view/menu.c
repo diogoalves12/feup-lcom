@@ -5,9 +5,7 @@
 #include "config.h"
 #include "renderer.h"
 
-#define exit exit_label_xpm
 #include "xpm/text/exit.xpm"
-#undef exit
 
 #include "xpm/buttons/button_gray_wide.xpm"
 #include "xpm/buttons/button_red_wide.xpm"
@@ -24,10 +22,9 @@
 #define MENU_OPTION_COLOR   0x404040
 #define MENU_SELECTED_COLOR 0x00AAFF
 
-#define HITBOX_PAD    20
-#define MENU_BTN_H    90
-#define FALLBACK_BTN_W  260
-#define FALLBACK_BTN_X  270
+#define MENU_BTN_W  560
+#define MENU_BTN_H   90
+#define MENU_BTN_X  120
 #define MENU_START_Y      145
 #define MENU_DIFFICULTY_Y 255
 #define MENU_EXIT_Y       365
@@ -103,32 +100,21 @@ void menu_state_reset(MenuState *menu) {
   menu->prev_lb        = false;
 }
 
-static bool cx_in_label_hitbox(int cx, const Sprite *label) {
-  int lw = (label->loaded && label->width > 0) ? (int)label->width : FALLBACK_BTN_W;
-  int hx = ((int)SCREEN_WIDTH - lw - 2 * HITBOX_PAD) / 2;
-  return cx >= hx && cx < hx + lw + 2 * HITBOX_PAD;
-}
-
 static void menu_state_update_hover(MenuState *menu) {
   int cx = (int)menu->cursor_x;
   int cy = (int)menu->cursor_y;
 
+  if (cx < MENU_BTN_X || cx >= MENU_BTN_X + MENU_BTN_W) return;
+
   if (menu->screen == MENU_SCREEN_MAIN) {
-    if      (cy >= MENU_START_Y      && cy < MENU_START_Y      + MENU_BTN_H
-             && cx_in_label_hitbox(cx, &menu->start_text))      menu->selection = MENU_SEL_START;
-    else if (cy >= MENU_DIFFICULTY_Y && cy < MENU_DIFFICULTY_Y + MENU_BTN_H
-             && cx_in_label_hitbox(cx, &menu->difficulty_text)) menu->selection = MENU_SEL_DIFFICULTY;
-    else if (cy >= MENU_EXIT_Y       && cy < MENU_EXIT_Y       + MENU_BTN_H
-             && cx_in_label_hitbox(cx, &menu->exit_text))       menu->selection = MENU_SEL_EXIT;
+    if      (cy >= MENU_START_Y      && cy < MENU_START_Y      + MENU_BTN_H) menu->selection = MENU_SEL_START;
+    else if (cy >= MENU_DIFFICULTY_Y && cy < MENU_DIFFICULTY_Y + MENU_BTN_H) menu->selection = MENU_SEL_DIFFICULTY;
+    else if (cy >= MENU_EXIT_Y       && cy < MENU_EXIT_Y       + MENU_BTN_H) menu->selection = MENU_SEL_EXIT;
   } else {
-    if      (cy >= DIFF_EASY_Y   && cy < DIFF_EASY_Y   + MENU_BTN_H
-             && cx_in_label_hitbox(cx, &menu->easy_text))   menu->diff_selection = MENU_DIFF_SEL_EASY;
-    else if (cy >= DIFF_MEDIUM_Y && cy < DIFF_MEDIUM_Y + MENU_BTN_H
-             && cx_in_label_hitbox(cx, &menu->medium_text)) menu->diff_selection = MENU_DIFF_SEL_MEDIUM;
-    else if (cy >= DIFF_HARD_Y   && cy < DIFF_HARD_Y   + MENU_BTN_H
-             && cx_in_label_hitbox(cx, &menu->hard_text))   menu->diff_selection = MENU_DIFF_SEL_HARD;
-    else if (cy >= DIFF_BACK_Y   && cy < DIFF_BACK_Y   + MENU_BTN_H
-             && cx_in_label_hitbox(cx, &menu->back_text))   menu->diff_selection = MENU_DIFF_SEL_BACK;
+    if      (cy >= DIFF_EASY_Y   && cy < DIFF_EASY_Y   + MENU_BTN_H) menu->diff_selection = MENU_DIFF_SEL_EASY;
+    else if (cy >= DIFF_MEDIUM_Y && cy < DIFF_MEDIUM_Y + MENU_BTN_H) menu->diff_selection = MENU_DIFF_SEL_MEDIUM;
+    else if (cy >= DIFF_HARD_Y   && cy < DIFF_HARD_Y   + MENU_BTN_H) menu->diff_selection = MENU_DIFF_SEL_HARD;
+    else if (cy >= DIFF_BACK_Y   && cy < DIFF_BACK_Y   + MENU_BTN_H) menu->diff_selection = MENU_DIFF_SEL_BACK;
   }
 }
 
@@ -257,11 +243,11 @@ static int render_difficulty_screen_sprites(const MenuState *menu) {
 static int render_main_screen_fallback(const MenuState *menu) {
   if (renderer_clear(MENU_BG_COLOR) != 0) return 1;
 
-  if (renderer_draw_rectangle(FALLBACK_BTN_X, MENU_START_Y, FALLBACK_BTN_W, MENU_BTN_H,
+  if (renderer_draw_rectangle(MENU_BTN_X, MENU_START_Y, MENU_BTN_W, MENU_BTN_H,
         menu->selection == MENU_SEL_START ? MENU_SELECTED_COLOR : MENU_OPTION_COLOR) != 0) return 1;
-  if (renderer_draw_rectangle(FALLBACK_BTN_X, MENU_DIFFICULTY_Y, FALLBACK_BTN_W, MENU_BTN_H,
+  if (renderer_draw_rectangle(MENU_BTN_X, MENU_DIFFICULTY_Y, MENU_BTN_W, MENU_BTN_H,
         menu->selection == MENU_SEL_DIFFICULTY ? MENU_SELECTED_COLOR : MENU_OPTION_COLOR) != 0) return 1;
-  if (renderer_draw_rectangle(FALLBACK_BTN_X, MENU_EXIT_Y, FALLBACK_BTN_W, MENU_BTN_H,
+  if (renderer_draw_rectangle(MENU_BTN_X, MENU_EXIT_Y, MENU_BTN_W, MENU_BTN_H,
         menu->selection == MENU_SEL_EXIT ? MENU_SELECTED_COLOR : MENU_OPTION_COLOR) != 0) return 1;
 
   return renderer_present();
@@ -270,13 +256,13 @@ static int render_main_screen_fallback(const MenuState *menu) {
 static int render_difficulty_screen_fallback(const MenuState *menu) {
   if (renderer_clear(MENU_BG_COLOR) != 0) return 1;
 
-  if (renderer_draw_rectangle(FALLBACK_BTN_X, DIFF_EASY_Y, FALLBACK_BTN_W, MENU_BTN_H,
+  if (renderer_draw_rectangle(MENU_BTN_X, DIFF_EASY_Y, MENU_BTN_W, MENU_BTN_H,
         menu->diff_selection == MENU_DIFF_SEL_EASY ? MENU_SELECTED_COLOR : MENU_OPTION_COLOR) != 0) return 1;
-  if (renderer_draw_rectangle(FALLBACK_BTN_X, DIFF_MEDIUM_Y, FALLBACK_BTN_W, MENU_BTN_H,
+  if (renderer_draw_rectangle(MENU_BTN_X, DIFF_MEDIUM_Y, MENU_BTN_W, MENU_BTN_H,
         menu->diff_selection == MENU_DIFF_SEL_MEDIUM ? MENU_SELECTED_COLOR : MENU_OPTION_COLOR) != 0) return 1;
-  if (renderer_draw_rectangle(FALLBACK_BTN_X, DIFF_HARD_Y, FALLBACK_BTN_W, MENU_BTN_H,
+  if (renderer_draw_rectangle(MENU_BTN_X, DIFF_HARD_Y, MENU_BTN_W, MENU_BTN_H,
         menu->diff_selection == MENU_DIFF_SEL_HARD ? MENU_SELECTED_COLOR : MENU_OPTION_COLOR) != 0) return 1;
-  if (renderer_draw_rectangle(FALLBACK_BTN_X, DIFF_BACK_Y, FALLBACK_BTN_W, MENU_BTN_H,
+  if (renderer_draw_rectangle(MENU_BTN_X, DIFF_BACK_Y, MENU_BTN_W, MENU_BTN_H,
         menu->diff_selection == MENU_DIFF_SEL_BACK ? MENU_SELECTED_COLOR : MENU_OPTION_COLOR) != 0) return 1;
 
   return renderer_present();
