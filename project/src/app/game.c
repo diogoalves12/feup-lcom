@@ -133,12 +133,14 @@ static int game_setup(Game *game) {
 
   game->state = GAME_STATE_MENU;
   menu_state_init(&game->menu);
+  if (menu_state_load_assets(&game->menu) != 0)
+    printf("menu_state_load_assets failed, using fallback rendering.\n");
 
   return 0;
 }
 
 static int game_shutdown(Game *game) {
-  (void) game;
+  menu_state_destroy_assets(&game->menu);
   if (renderer_shutdown() != 0) {
     printf("renderer_shutdown failed.\n");
     return 1;
@@ -171,7 +173,7 @@ static void game_apply_transition(Game *game, GameState next) {
       pause_menu_state_init(&game->pause_menu);
       break;
     case GAME_STATE_MENU:
-      menu_state_init(&game->menu);
+      menu_state_reset(&game->menu);
       break;
     case GAME_STATE_GAME_OVER:
       game_over_state_init(&game->game_over, game->game_over.winner);
