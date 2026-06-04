@@ -9,13 +9,26 @@
 
 #define COMBAT_DAMAGE 1
 #define COMBAT_RAY_STEP 4
-#define COMBAT_AIM_TOLERANCE 12
+#define COMBAT_AIM_TOLERANCE 14
 #define COMBAT_MAX_DISTANCE 900
 #define COMBAT_SHOT_COOLDOWN_TICKS 20
+#define COMBAT_SHOT_EFFECT_FRAMES 8
 
 typedef struct {
-  uint32_t player1_next_allowed_shot_frame;
-  uint32_t player2_next_allowed_shot_frame;
+  bool     active;
+  Position start;
+  Position end;
+  float    angle;
+  int      shooter_num;
+  bool     hit;
+  uint32_t start_frame;
+  uint32_t expire_frame;
+} ShotEffect;
+
+typedef struct {
+  uint32_t  player1_next_allowed_shot_frame;
+  uint32_t  player2_next_allowed_shot_frame;
+  ShotEffect last_shot;
 } CombatState;
 
 void combat_init(CombatState *combat);

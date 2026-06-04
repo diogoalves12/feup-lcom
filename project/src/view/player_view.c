@@ -2,13 +2,15 @@
 
 #include <math.h>
 #include <stddef.h>
+#include <stdio.h>
 
 #include "renderer.h"
 
 #include "xpm/player/player1/player_gun.xpm"
 #include "xpm/player/player2/soldier1_gun.xpm"
+#include "xpm/bullets/bullet_small.xpm"
 
-/* Adjust if the sprite is not facing right (angle=0) by default. */
+
 #define PLAYER_SPRITE_ANGLE_OFFSET 0.0f
 
 #define PLAYER_INDICATOR_RADIUS  10
@@ -19,9 +21,12 @@ int player_view_load_assets(PlayerViewAssets *assets) {
   if (assets == NULL) return 1;
   sprite_init(&assets->p1);
   sprite_init(&assets->p2);
+  sprite_init(&assets->bullet);
   assets->loaded = false;
-  if (sprite_load(&assets->p1, player_gun_xpm)    != 0) { player_view_destroy_assets(assets); return 1; }
-  if (sprite_load(&assets->p2, soldier1_gun_xpm)  != 0) { player_view_destroy_assets(assets); return 1; }
+  if (sprite_load(&assets->p1, player_gun_xpm)   != 0) { player_view_destroy_assets(assets); return 1; }
+  if (sprite_load(&assets->p2, soldier1_gun_xpm) != 0) { player_view_destroy_assets(assets); return 1; }
+  if (sprite_load(&assets->bullet, bullet_small_xpm) != 0)
+    printf("bullet_small load failed, using fallback.\n");
   assets->loaded = true;
   return 0;
 }
@@ -30,6 +35,7 @@ void player_view_destroy_assets(PlayerViewAssets *assets) {
   if (assets == NULL) return;
   sprite_destroy(&assets->p1);
   sprite_destroy(&assets->p2);
+  sprite_destroy(&assets->bullet);
   assets->loaded = false;
 }
 

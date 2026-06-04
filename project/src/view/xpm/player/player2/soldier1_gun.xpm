@@ -2,7 +2,7 @@
 static xpm_row_t const soldier1_gun_xpm[] = {
 /* columns rows colors chars-per-pixel */
 "52 43 32 1 ",
-"  c #1F1C12",
+"  c None",
 ". c #010101",
 "X c #9C7B63",
 "o c #645031",

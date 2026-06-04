@@ -8,7 +8,7 @@ static void add_rect(Arena *arena, Rect rect) {
   }
 }
 
-/* 40x30 grid. Spawns: P1=(15,3), P2=(15,36). Borders at row 0,29 and col 0,39. */
+
 
 static void apply_easy(Arena *arena) {
   add_rect(arena, (Rect) {6,  10, 2, 2});

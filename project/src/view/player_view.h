@@ -9,6 +9,7 @@
 typedef struct {
   Sprite p1;
   Sprite p2;
+  Sprite bullet;
   bool   loaded;
 } PlayerViewAssets;
 

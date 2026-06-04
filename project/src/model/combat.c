@@ -8,6 +8,7 @@ void combat_init(CombatState *combat) {
 
   combat->player1_next_allowed_shot_frame = 0;
   combat->player2_next_allowed_shot_frame = 0;
+  combat->last_shot.active = false;
 }
 
 void combat_reset(CombatState *combat) {
@@ -31,12 +32,12 @@ bool combat_try_shoot(CombatState *combat, int shooter_num, const Player *shoote
   if (combat == NULL || shooter == NULL || target == NULL || arena == NULL) return false;
   if (shooter_num != 1 && shooter_num != 2) return false;
 
-  uint32_t *next_allowed_shot_frame = (shooter_num == 1) ? &combat->player1_next_allowed_shot_frame : &combat->player2_next_allowed_shot_frame;
+  uint32_t *next_allowed = (shooter_num == 1) ? &combat->player1_next_allowed_shot_frame : &combat->player2_next_allowed_shot_frame;
 
-  if (frame_counter < *next_allowed_shot_frame) return false;
-  if (!shooter->alive || !target->alive)        return false;
+  if (frame_counter < *next_allowed) return false;
+  if (!shooter->alive || !target->alive) return false;
 
-  *next_allowed_shot_frame = frame_counter + COMBAT_SHOT_COOLDOWN_TICKS;
+  *next_allowed = frame_counter + COMBAT_SHOT_COOLDOWN_TICKS;
 
   float direction_x = cosf(shooter->angle);
   float direction_y = sinf(shooter->angle);
@@ -50,25 +51,45 @@ bool combat_try_shoot(CombatState *combat, int shooter_num, const Player *shoote
   const int arena_max_x = ARENA_COLS * TILE_SIZE;
   const int arena_max_y = ARENA_ROWS * TILE_SIZE;
   int travelled_distance = 0;
+  int end_x = (int) ray_x;
+  int end_y = (int) ray_y;
+  bool hit = false;
 
   while (true) {
     int pixel_x = (int) ray_x;
     int pixel_y = (int) ray_y;
 
-    if (pixel_x < 0 || pixel_y < 0 || pixel_x >= arena_max_x || pixel_y >= arena_max_y) return false;
-    if (travelled_distance > COMBAT_MAX_DISTANCE) return false;
+    if (pixel_x < 0 || pixel_y < 0 || pixel_x >= arena_max_x || pixel_y >= arena_max_y) break;
+    if (travelled_distance > COMBAT_MAX_DISTANCE) break;
 
     int tile_col = pixel_x / TILE_SIZE;
     int tile_row = pixel_y / TILE_SIZE;
-    if (arena_is_wall_tile(arena_get_tile_type(arena, tile_row, tile_col))) return false;
+    if (arena_is_wall_tile(arena_get_tile_type(arena, tile_row, tile_col))) break;
+
+    end_x = pixel_x;
+    end_y = pixel_y;
 
     if (point_inside_player(pixel_x, pixel_y, target)) {
       player_damage(target, COMBAT_DAMAGE);
-      return true;
+      hit = true;
+      break;
     }
 
     ray_x += step_x;
     ray_y += step_y;
     travelled_distance += COMBAT_RAY_STEP;
   }
+
+  combat->last_shot.active         = true;
+  combat->last_shot.start.x        = (int) ((float) shooter->position.x + direction_x * (shooter_half_width + 1.0f));
+  combat->last_shot.start.y        = (int) ((float) shooter->position.y + direction_y * (shooter_half_width + 1.0f));
+  combat->last_shot.end.x          = end_x;
+  combat->last_shot.end.y          = end_y;
+  combat->last_shot.angle          = shooter->angle;
+  combat->last_shot.shooter_num    = shooter_num;
+  combat->last_shot.hit            = hit;
+  combat->last_shot.start_frame    = frame_counter;
+  combat->last_shot.expire_frame   = frame_counter + COMBAT_SHOT_EFFECT_FRAMES;
+
+  return hit;
 }

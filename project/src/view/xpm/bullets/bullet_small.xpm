@@ -1,0 +1,14 @@
+/* XPM */
+static xpm_row_t bullet_small_xpm[] = {
+/* columns rows colors chars-per-pixel */
+"12 5 3 1 ",
+"  c None",
+". c #FFFF00",
+"O c #FFFFFF",
+/* pixels */
+"   ......   ",
+" ..OOOOOO.. ",
+"..OOOOOOOO..",
+" ..OOOOOO.. ",
+"   ......   "
+};

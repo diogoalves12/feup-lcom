@@ -38,8 +38,6 @@ typedef struct {
   Player           player1;
   Player           player2;
   CombatState      combat;
-  bool             prev_p1_shoot;
-  bool             prev_p2_shoot;
   MenuState        menu;
   PauseMenuState   pause_menu;
   GameOverState    game_over;
@@ -85,11 +83,10 @@ static void update_player_movement(Player *player, const PlayerInputActions *inp
   }
 }
 
-static void try_player_shot(Game *game, int player_num, Player *shooter, Player *target, bool action_shoot, bool *prev_shoot) {
-  if (action_shoot && !*prev_shoot) {
+static void try_player_shot(Game *game, int player_num, Player *shooter, Player *target, bool action_shoot) {
+  if (action_shoot) {
     combat_try_shoot(&game->combat, player_num, shooter, target, &game->arena, game->frame_counter);
   }
-  *prev_shoot = action_shoot;
 }
 
 static bool update_game_over_if_needed(Game *game) {
@@ -135,8 +132,6 @@ static int game_setup(Game *game) {
   if (player_view_load_assets(&game->player_assets) != 0)
     printf("player_view_load_assets failed, using fallback rendering.\n");
   combat_init(&game->combat);
-  game->prev_p1_shoot = false;
-  game->prev_p2_shoot = false;
 
   game->state = GAME_STATE_MENU;
   game->selected_difficulty = DEFAULT_ARENA_DIFFICULTY;
@@ -165,8 +160,6 @@ static void game_start_match(Game *game) {
   player_init(&game->player2, arena_get_player2_spawn(&game->arena), PLAYER2_INITIAL_ANGLE, PLAYER2_COLOR);
 
   combat_reset(&game->combat);
-  game->prev_p1_shoot = false;
-  game->prev_p2_shoot = false;
   game->frame_counter = 0;
 }
 
@@ -396,10 +389,10 @@ static void state_playing_update(Game *game) {
   }
 
   update_player_movement(&game->player1, &game->actions.player1, &game->arena);
-  try_player_shot(game, 1, &game->player1, &game->player2, game->actions.player1.shoot, &game->prev_p1_shoot);
+  try_player_shot(game, 1, &game->player1, &game->player2, game->actions.player1.shoot);
 
   update_player_movement(&game->player2, &game->actions.player2, &game->arena);
-  try_player_shot(game, 2, &game->player2, &game->player1, game->actions.player2.shoot, &game->prev_p2_shoot);
+  try_player_shot(game, 2, &game->player2, &game->player1, game->actions.player2.shoot);
 
   update_game_over_if_needed(game);
 }
@@ -426,9 +419,44 @@ static void state_game_over_update(Game *game) {
   game_apply_transition(game, next);
 }
 
+#define BULLET_SPRITE_ANGLE_OFFSET 0.0f
+
+static void draw_shot_effect(const ShotEffect *shot, uint32_t frame_counter, const PlayerViewAssets *assets) {
+  if (!shot->active || frame_counter >= shot->expire_frame) return;
+
+  uint32_t elapsed  = frame_counter - shot->start_frame;
+  uint32_t duration = shot->expire_frame - shot->start_frame;
+  float progress = (float) elapsed / (float) duration;
+  if (progress > 1.0f) progress = 1.0f;
+
+  int dx = shot->end.x - shot->start.x;
+  int dy = shot->end.y - shot->start.y;
+
+  int cur_x = shot->start.x + (int) (progress * (float) dx);
+  int cur_y = shot->start.y + (int) (progress * (float) dy);
+
+  
+  float trail_p = progress - 0.15f;
+  if (trail_p > 0.0f) {
+    int tx = shot->start.x + (int) (trail_p * (float) dx);
+    int ty = shot->start.y + (int) (trail_p * (float) dy);
+    if (tx >= 0 && ty >= 0 && tx < SCREEN_WIDTH - 1 && ty < SCREEN_HEIGHT - 1)
+      renderer_draw_rectangle((uint16_t) tx, (uint16_t) ty, 2, 2, 0xFFFF80);
+  }
+
+  
+  if (assets != NULL && assets->bullet.loaded) {
+    sprite_draw_rotated(&assets->bullet, cur_x, cur_y, shot->angle + BULLET_SPRITE_ANGLE_OFFSET);
+  } else {
+    if (cur_x >= 2 && cur_y >= 2 && cur_x < SCREEN_WIDTH - 2 && cur_y < SCREEN_HEIGHT - 2)
+      renderer_draw_rectangle((uint16_t) (cur_x - 2), (uint16_t) (cur_y - 2), 4, 4, 0xFFFF40);
+  }
+}
+
 static int render_playing(const Game *game) {
   if (renderer_clear(PROJECT_BG_COLOR) != 0) return 1;
   if (arena_view_draw(&game->arena) != 0) return 1;
+  draw_shot_effect(&game->combat.last_shot, game->frame_counter, &game->player_assets);
   if (player_view_draw(&game->player1, &game->player_assets, 1) != 0) return 1;
   if (player_view_draw(&game->player2, &game->player_assets, 2) != 0) return 1;
   render_hud(game);
