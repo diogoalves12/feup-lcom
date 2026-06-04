@@ -8,6 +8,7 @@
 #define TILE_SIZE 20
 #define ARENA_COLS 40
 #define ARENA_ROWS 30
+#define ARENA_PIXEL_WIDTH (ARENA_COLS * TILE_SIZE)
 
 typedef enum {
   TILE_FLOOR = 0,

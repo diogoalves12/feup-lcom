@@ -13,7 +13,6 @@
 #include "game_input.h"
 #include "game_over.h"
 #include "game_state.h"
-#include "i8042.h"
 #include "keyboard.h"
 #include "keyboard_input.h"
 #include "menu.h"
@@ -23,8 +22,6 @@
 #include "player.h"
 #include "player_view.h"
 #include "renderer.h"
-
-#define ARENA_PIXEL_WIDTH   (ARENA_COLS * TILE_SIZE)
 
 typedef struct {
   GameState        state;
@@ -104,8 +101,8 @@ static bool update_game_over_if_needed(Game *game) {
 }
 
 static void render_hud(const Game *game) {
-  player_view_draw_health_bar(&game->player1, 20, 20);
-  player_view_draw_health_bar(&game->player2, ARENA_PIXEL_WIDTH - 20 - (PLAYER_DEFAULT_HEALTH * 15), 20);
+  player_view_draw_health_bar(&game->player1, 15, 12);
+  player_view_draw_health_bar(&game->player2, ARENA_PIXEL_WIDTH - 15 - player_view_health_bar_width(), 12);
 }
 
 static int game_setup(Game *game) {
@@ -419,8 +416,6 @@ static void state_game_over_update(Game *game) {
   game_apply_transition(game, next);
 }
 
-#define BULLET_SPRITE_ANGLE_OFFSET 0.0f
-
 static void draw_shot_effect(const ShotEffect *shot, uint32_t frame_counter, const PlayerViewAssets *assets) {
   if (!shot->active || frame_counter >= shot->expire_frame) return;
 
@@ -435,21 +430,24 @@ static void draw_shot_effect(const ShotEffect *shot, uint32_t frame_counter, con
   int cur_x = shot->start.x + (int) (progress * (float) dx);
   int cur_y = shot->start.y + (int) (progress * (float) dy);
 
-  
-  float trail_p = progress - 0.15f;
-  if (trail_p > 0.0f) {
-    int tx = shot->start.x + (int) (trail_p * (float) dx);
-    int ty = shot->start.y + (int) (trail_p * (float) dy);
-    if (tx >= 0 && ty >= 0 && tx < SCREEN_WIDTH - 1 && ty < SCREEN_HEIGHT - 1)
-      renderer_draw_rectangle((uint16_t) tx, (uint16_t) ty, 2, 2, 0xFFFF80);
-  }
-
-  
+  /* bullet sprite or fallback */
   if (assets != NULL && assets->bullet.loaded) {
-    sprite_draw_rotated(&assets->bullet, cur_x, cur_y, shot->angle + BULLET_SPRITE_ANGLE_OFFSET);
+    sprite_draw_rotated(&assets->bullet, cur_x, cur_y, shot->angle);
   } else {
     if (cur_x >= 2 && cur_y >= 2 && cur_x < SCREEN_WIDTH - 2 && cur_y < SCREEN_HEIGHT - 2)
       renderer_draw_rectangle((uint16_t) (cur_x - 2), (uint16_t) (cur_y - 2), 4, 4, 0xFFFF40);
+  }
+
+  /* impact cross at end point when the shot hit */
+  if (shot->hit) {
+    int ex = shot->end.x;
+    int ey = shot->end.y;
+    if (ex >= 4 && ey >= 0 && ex < SCREEN_WIDTH - 4 && ey < SCREEN_HEIGHT)
+      renderer_draw_rectangle((uint16_t)(ex - 4), (uint16_t) ey, 9, 1, 0xFF6600);
+    if (ex >= 0 && ey >= 4 && ex < SCREEN_WIDTH && ey < SCREEN_HEIGHT - 4)
+      renderer_draw_rectangle((uint16_t) ex, (uint16_t)(ey - 4), 1, 9, 0xFF6600);
+    if (ex >= 1 && ey >= 1 && ex < SCREEN_WIDTH - 1 && ey < SCREEN_HEIGHT - 1)
+      renderer_draw_rectangle((uint16_t)(ex - 1), (uint16_t)(ey - 1), 3, 3, 0xFFAA00);
   }
 }
 
