@@ -1,5 +1,5 @@
 /* XPM */
-static char *select_difficulty[] = {
+static xpm_row_t const select_difficulty[] = {
 /* columns rows colors chars-per-pixel */
 "608 55 2 1 ",
 "  c None",

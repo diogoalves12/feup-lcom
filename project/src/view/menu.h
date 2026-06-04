@@ -1,28 +1,53 @@
 #ifndef PROJECT_UI_MENU_H
 #define PROJECT_UI_MENU_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
+#include "arena.h"
 #include "game_input.h"
 #include "game_state.h"
 #include "mouse_input.h"
 #include "sprite.h"
 
 typedef enum {
+  MENU_SCREEN_MAIN = 0,
+  MENU_SCREEN_DIFFICULTY
+} MenuScreen;
+
+typedef enum {
   MENU_SEL_START = 0,
+  MENU_SEL_DIFFICULTY,
   MENU_SEL_EXIT
 } MenuSelection;
 
+typedef enum {
+  MENU_DIFF_SEL_EASY = 0,
+  MENU_DIFF_SEL_MEDIUM,
+  MENU_DIFF_SEL_HARD,
+  MENU_DIFF_SEL_BACK
+} MenuDiffSelection;
+
 typedef struct {
-  MenuSelection selection;
-  Sprite        button;
-  Sprite        button_selected;
-  Sprite        play_text;
-  Sprite        cursor;
-  int16_t       cursor_x;
-  int16_t       cursor_y;
-  bool          prev_lb;
-  bool          assets_loaded;
+  MenuScreen        screen;
+  MenuSelection     selection;
+  MenuDiffSelection diff_selection;
+  ArenaDifficulty   selected_difficulty;
+  Sprite            button;
+  Sprite            button_selected;
+  Sprite            start_text;
+  Sprite            difficulty_text;
+  Sprite            exit_text;
+  Sprite            select_diff_title;
+  Sprite            easy_text;
+  Sprite            medium_text;
+  Sprite            hard_text;
+  Sprite            back_text;
+  Sprite            cursor;
+  int16_t           cursor_x;
+  int16_t           cursor_y;
+  bool              prev_lb;
+  bool              assets_loaded;
 } MenuState;
 
 void menu_state_init(MenuState *menu);

@@ -44,6 +44,7 @@ typedef struct {
   PauseMenuState   pause_menu;
   GameOverState    game_over;
   bool             restart_requested;
+  ArenaDifficulty  selected_difficulty;
 } Game;
 
 static int  game_setup(Game *game);
@@ -132,6 +133,7 @@ static int game_setup(Game *game) {
   game->prev_p2_shoot = false;
 
   game->state = GAME_STATE_MENU;
+  game->selected_difficulty = DEFAULT_ARENA_DIFFICULTY;
   menu_state_init(&game->menu);
   if (menu_state_load_assets(&game->menu) != 0)
     printf("menu_state_load_assets failed, using fallback rendering.\n");
@@ -149,7 +151,7 @@ static int game_shutdown(Game *game) {
 }
 
 static void game_start_match(Game *game) {
-  arena_init(&game->arena, DEFAULT_ARENA_DIFFICULTY);
+  arena_init(&game->arena, game->selected_difficulty);
   player_init(&game->player1, arena_get_player1_spawn(&game->arena), PLAYER1_INITIAL_ANGLE, PLAYER1_COLOR);
   player_init(&game->player2, arena_get_player2_spawn(&game->arena), PLAYER2_INITIAL_ANGLE, PLAYER2_COLOR);
 
@@ -374,6 +376,7 @@ static void game_tick(Game *game) {
 static void state_menu_update(Game *game) {
   GameState next = game->state;
   menu_state_update(&game->menu, &game->actions, &next);
+  game->selected_difficulty = game->menu.selected_difficulty;
   game_apply_transition(game, next);
 }
 
