@@ -430,14 +430,6 @@ static void draw_shot_effect(const ShotEffect *shot, uint32_t frame_counter, con
   int cur_x = shot->start.x + (int) (progress * (float) dx);
   int cur_y = shot->start.y + (int) (progress * (float) dy);
 
-  float trail_p = progress - 0.15f;
-  if (trail_p > 0.0f) {
-    int tx = shot->start.x + (int) (trail_p * (float) dx);
-    int ty = shot->start.y + (int) (trail_p * (float) dy);
-    if (tx >= 0 && ty >= 0 && tx < SCREEN_WIDTH - 1 && ty < SCREEN_HEIGHT - 1)
-      renderer_draw_rectangle((uint16_t) tx, (uint16_t) ty, 2, 2, 0xFFFF80);
-  }
-
   /* bullet sprite or fallback */
   if (assets != NULL && assets->bullet.loaded) {
     sprite_draw_rotated(&assets->bullet, cur_x, cur_y, shot->angle);
