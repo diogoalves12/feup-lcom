@@ -54,6 +54,7 @@ static int  game_disable_mouse(void);
 static void game_handle_timer_interrupt(Game *game);
 static void game_handle_keyboard_interrupt(Game *game);
 static void game_handle_mouse_interrupt(Game *game);
+static void game_process_mouse_byte(Game *game, uint8_t byte);
 
 static void game_start_match(Game *game);
 static void game_apply_transition(Game *game, GameState next);
@@ -252,16 +253,21 @@ static void game_handle_keyboard_interrupt(Game *game) {
 }
 
 static void game_handle_mouse_interrupt(Game *game) {
-  mouse_ih();
-  if (!mouse_get_error()) {
-    uint8_t byte = mouse_get_byte();
-    struct packet pkt;
-    if (mouse_sync_byte(byte, game->mouse_packet, &game->mouse_packet_idx)) {
-      mouse_parse_packet_bytes(game->mouse_packet, &pkt);
-      mouse_input_set(&game->mouse, pkt.lb, pkt.rb, pkt.mb);
-      if (game->state == GAME_STATE_MENU && !pkt.x_ov && !pkt.y_ov)
-        menu_state_move_cursor(&game->menu, pkt.delta_x, pkt.delta_y);
-    }
+  uint8_t byte;
+  int status;
+  while ((status = mouse_read_pending_byte(&byte)) > 0) {
+    game_process_mouse_byte(game, byte);
+  }
+  if (status < 0) game->mouse_packet_idx = 0;
+}
+
+static void game_process_mouse_byte(Game *game, uint8_t byte) {
+  struct packet pkt;
+  if (mouse_sync_byte(byte, game->mouse_packet, &game->mouse_packet_idx)) {
+    mouse_parse_packet_bytes(game->mouse_packet, &pkt);
+    mouse_input_set(&game->mouse, pkt.lb, pkt.rb, pkt.mb);
+    if (game->state == GAME_STATE_MENU && !pkt.x_ov && !pkt.y_ov)
+      menu_state_move_cursor(&game->menu, pkt.delta_x, pkt.delta_y);
   }
 }
 

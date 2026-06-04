@@ -25,6 +25,11 @@ void (kbc_ih)() {
   }
 
   if (status & KBC_OBF) {
+    if (status & KBC_AUX) {
+      error_found = true;
+      return;
+    }
+
     if (util_sys_inb(KBC_OUT_BUF, &scancode) != 0) {
       error_found = true;
       return;
