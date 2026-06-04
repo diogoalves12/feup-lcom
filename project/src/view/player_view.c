@@ -29,7 +29,7 @@ int player_view_load_assets(PlayerViewAssets *assets) {
   sprite_init(&assets->p2);
   sprite_init(&assets->bullet);
   assets->loaded = false;
-  if (sprite_load(&assets->p1, player_gun_xpm)   != 0) { player_view_destroy_assets(assets); return 1; }
+  if (sprite_load(&assets->p1, player_gun_xpm) != 0) { player_view_destroy_assets(assets); return 1; }
   if (sprite_load(&assets->p2, soldier1_gun_xpm) != 0) { player_view_destroy_assets(assets); return 1; }
   if (sprite_load(&assets->bullet, bullet_small_xpm) != 0)
     printf("bullet_small load failed, using fallback.\n");
@@ -68,7 +68,7 @@ int player_view_draw(const Player *player, const PlayerViewAssets *assets, int p
                             player->position.y,
                             player->angle) != 0) return 1;
   } else {
-    int x = player->position.x - player->width  / 2;
+    int x = player->position.x - player->width / 2;
     int y = player->position.y - player->height / 2;
     if (x < 0 || y < 0) return 1;
     if (renderer_draw_rectangle((uint16_t)x, (uint16_t)y,
@@ -95,8 +95,8 @@ void player_view_draw_health_bar(const Player *player, int screen_x, int screen_
 
   int current_health = (player->alive && player->health > 0) ? player->health : 0;
   for (int i = 0; i < PLAYER_DEFAULT_HEALTH; i++) {
-    int bx    = screen_x + PLAYER_HUD_PAD + i * (PLAYER_HUD_BLOCK_W + PLAYER_HUD_GAP);
-    int by    = screen_y + PLAYER_HUD_PAD;
+    int bx = screen_x + PLAYER_HUD_PAD + i * (PLAYER_HUD_BLOCK_W + PLAYER_HUD_GAP);
+    int by = screen_y + PLAYER_HUD_PAD;
     uint32_t color = (i < current_health) ? player->color : 0x333333;
     renderer_draw_rectangle((uint16_t) bx, (uint16_t) by, PLAYER_HUD_BLOCK_W, PLAYER_HUD_BLOCK_H, color);
   }
