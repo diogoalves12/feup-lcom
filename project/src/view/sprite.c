@@ -1,5 +1,6 @@
 #include "sprite.h"
 
+#include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <lcom/lcf.h>
@@ -76,6 +77,44 @@ int sprite_draw_clipped(const Sprite *sprite, int16_t x, int16_t y) {
       color |= (uint32_t) sprite->pixels[offset + 3] << 24;
       if (color == sprite->transparent_color) continue;
       renderer_draw_pixel((uint16_t) dst_x, (uint16_t) dst_y, color);
+    }
+  }
+  return 0;
+}
+
+int sprite_draw_rotated(const Sprite *sprite, int cx, int cy, float angle) {
+  if (sprite == NULL || !sprite->loaded || sprite->pixels == NULL) return 1;
+
+  int hw = (int)sprite->width  / 2;
+  int hh = (int)sprite->height / 2;
+
+  float cos_a = cosf(angle);
+  float sin_a = sinf(angle);
+
+  int half_diag = (int)sqrtf((float)(hw * hw + hh * hh)) + 1;
+
+  for (int dy = -half_diag; dy <= half_diag; dy++) {
+    int dst_y = cy + dy;
+    if (dst_y < 0 || dst_y >= SCREEN_HEIGHT) continue;
+    for (int dx = -half_diag; dx <= half_diag; dx++) {
+      int dst_x = cx + dx;
+      if (dst_x < 0 || dst_x >= SCREEN_WIDTH) continue;
+
+      int src_x = (int)roundf((float)dx * cos_a + (float)dy * sin_a) + hw;
+      int src_y = (int)roundf(-(float)dx * sin_a + (float)dy * cos_a) + hh;
+
+      if (src_x < 0 || src_x >= (int)sprite->width)  continue;
+      if (src_y < 0 || src_y >= (int)sprite->height) continue;
+
+      size_t offset = ((size_t)src_y * sprite->width + src_x) * 4;
+      uint32_t color = 0;
+      color |= (uint32_t)sprite->pixels[offset];
+      color |= (uint32_t)sprite->pixels[offset + 1] << 8;
+      color |= (uint32_t)sprite->pixels[offset + 2] << 16;
+      color |= (uint32_t)sprite->pixels[offset + 3] << 24;
+      if (color == sprite->transparent_color) continue;
+
+      if (renderer_draw_pixel((uint16_t)dst_x, (uint16_t)dst_y, color) != 0) return 1;
     }
   }
   return 0;

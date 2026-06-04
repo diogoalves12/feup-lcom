@@ -8,54 +8,52 @@ static void add_rect(Arena *arena, Rect rect) {
   }
 }
 
+/* 40x30 grid. Spawns: P1=(15,3), P2=(15,36). Borders at row 0,29 and col 0,39. */
+
 static void apply_easy(Arena *arena) {
-  add_rect(arena, (Rect) {5, 10, 2, 2});
-  add_rect(arena, (Rect) {17, 10, 2, 2});
-  add_rect(arena, (Rect) {10, 15, 1, 3});
-  add_rect(arena, (Rect) {10, 16, 1, 3});
-  add_rect(arena, (Rect) {8, 24, 2, 2});
-  add_rect(arena, (Rect) {14, 6, 2, 2});
+  add_rect(arena, (Rect) {6,  10, 2, 2});
+  add_rect(arena, (Rect) {22, 10, 2, 2});
+  add_rect(arena, (Rect) {12, 19, 4, 1});
+  add_rect(arena, (Rect) {17, 19, 4, 1});
+  add_rect(arena, (Rect) {10, 28, 2, 2});
+  add_rect(arena, (Rect) {18, 28, 2, 2});
 }
 
 static void apply_medium(Arena *arena) {
-  add_rect(arena, (Rect) {4, 8, 2, 3});
-  add_rect(arena, (Rect) {17, 8, 2, 3});
-  add_rect(arena, (Rect) {7, 14, 1, 4});
-  add_rect(arena, (Rect) {13, 17, 1, 4});
-  add_rect(arena, (Rect) {10, 12, 2, 2});
-  add_rect(arena, (Rect) {12, 18, 2, 2});
-  add_rect(arena, (Rect) {6, 24, 2, 2});
-  add_rect(arena, (Rect) {16, 24, 2, 2});
-  add_rect(arena, (Rect) {9, 5, 2, 1});
-  add_rect(arena, (Rect) {14, 5, 2, 1});
+  add_rect(arena, (Rect) {5,  8,  3, 2});
+  add_rect(arena, (Rect) {23, 8,  3, 2});
+  add_rect(arena, (Rect) {8,  17, 4, 1});
+  add_rect(arena, (Rect) {21, 17, 4, 1});
+  add_rect(arena, (Rect) {13, 14, 2, 2});
+  add_rect(arena, (Rect) {15, 25, 2, 2});
+  add_rect(arena, (Rect) {7,  29, 2, 2});
+  add_rect(arena, (Rect) {21, 29, 2, 2});
+  add_rect(arena, (Rect) {11, 5,  1, 2});
+  add_rect(arena, (Rect) {17, 5,  1, 2});
 }
 
 static void apply_hard(Arena *arena) {
-  add_rect(arena, (Rect) {4, 7, 2, 3});
-  add_rect(arena, (Rect) {17, 7, 2, 3});
-  add_rect(arena, (Rect) {6, 12, 1, 4});
-  add_rect(arena, (Rect) {14, 12, 1, 4});
-  add_rect(arena, (Rect) {5, 18, 2, 2});
-  add_rect(arena, (Rect) {17, 18, 2, 2});
-  add_rect(arena, (Rect) {10, 10, 2, 1});
-  add_rect(arena, (Rect) {13, 10, 2, 1});
-  add_rect(arena, (Rect) {9, 16, 2, 1});
-  add_rect(arena, (Rect) {14, 16, 2, 1});
-  add_rect(arena, (Rect) {10, 22, 1, 3});
-  add_rect(arena, (Rect) {11, 23, 1, 3});
+  add_rect(arena, (Rect) {4,  7,  3, 2});
+  add_rect(arena, (Rect) {24, 7,  3, 2});
+  add_rect(arena, (Rect) {7,  14, 4, 1});
+  add_rect(arena, (Rect) {22, 14, 4, 1});
+  add_rect(arena, (Rect) {5,  22, 2, 2});
+  add_rect(arena, (Rect) {23, 22, 2, 2});
+  add_rect(arena, (Rect) {12, 11, 1, 2});
+  add_rect(arena, (Rect) {16, 11, 1, 2});
+  add_rect(arena, (Rect) {11, 18, 1, 2});
+  add_rect(arena, (Rect) {17, 18, 1, 2});
+  add_rect(arena, (Rect) {12, 28, 3, 1});
+  add_rect(arena, (Rect) {17, 28, 3, 1});
+  add_rect(arena, (Rect) {9,  33, 2, 2});
+  add_rect(arena, (Rect) {19, 33, 2, 2});
 }
 
 void arena_layout_apply(Arena *arena, ArenaDifficulty difficulty) {
   switch (difficulty) {
-    case ARENA_EASY:
-      apply_easy(arena);
-      break;
-    case ARENA_HARD:
-      apply_hard(arena);
-      break;
+    case ARENA_EASY:   apply_easy(arena);   break;
+    case ARENA_HARD:   apply_hard(arena);   break;
     case ARENA_MEDIUM:
-    default:
-      apply_medium(arena);
-      break;
+    default:           apply_medium(arena); break;
   }
 }

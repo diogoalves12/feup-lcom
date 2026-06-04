@@ -43,6 +43,7 @@ typedef struct {
   MenuState        menu;
   PauseMenuState   pause_menu;
   GameOverState    game_over;
+  PlayerViewAssets player_assets;
   bool             restart_requested;
   ArenaDifficulty  selected_difficulty;
 } Game;
@@ -131,6 +132,8 @@ static int game_setup(Game *game) {
   pause_menu_state_init(&game->pause_menu);
   if (pause_menu_state_load_assets(&game->pause_menu) != 0)
     printf("pause_menu_state_load_assets failed, using fallback rendering.\n");
+  if (player_view_load_assets(&game->player_assets) != 0)
+    printf("player_view_load_assets failed, using fallback rendering.\n");
   combat_init(&game->combat);
   game->prev_p1_shoot = false;
   game->prev_p2_shoot = false;
@@ -148,6 +151,7 @@ static int game_shutdown(Game *game) {
   menu_state_destroy_assets(&game->menu);
   pause_menu_state_destroy_assets(&game->pause_menu);
   game_over_state_destroy_assets(&game->game_over);
+  player_view_destroy_assets(&game->player_assets);
   if (renderer_shutdown() != 0) {
     printf("renderer_shutdown failed.\n");
     return 1;
@@ -425,8 +429,8 @@ static void state_game_over_update(Game *game) {
 static int render_playing(const Game *game) {
   if (renderer_clear(PROJECT_BG_COLOR) != 0) return 1;
   if (arena_view_draw(&game->arena) != 0) return 1;
-  if (player_view_draw(&game->player1) != 0) return 1;
-  if (player_view_draw(&game->player2) != 0) return 1;
+  if (player_view_draw(&game->player1, &game->player_assets, 1) != 0) return 1;
+  if (player_view_draw(&game->player2, &game->player_assets, 2) != 0) return 1;
   render_hud(game);
   return renderer_present();
 }
@@ -434,8 +438,8 @@ static int render_playing(const Game *game) {
 static int render_paused(const Game *game) {
   if (renderer_clear(PROJECT_BG_COLOR) != 0) return 1;
   if (arena_view_draw(&game->arena) != 0) return 1;
-  if (player_view_draw(&game->player1) != 0) return 1;
-  if (player_view_draw(&game->player2) != 0) return 1;
+  if (player_view_draw(&game->player1, &game->player_assets, 1) != 0) return 1;
+  if (player_view_draw(&game->player2, &game->player_assets, 2) != 0) return 1;
   render_hud(game);
   if (renderer_draw_rectangle(0, 0, ARENA_PIXEL_WIDTH, PAUSE_BAR_HEIGHT, PAUSE_BAR_COLOR) != 0) {
     return 1;

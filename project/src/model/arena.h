@@ -5,9 +5,9 @@
 
 #include "types.h"
 
-#define TILE_SIZE 25
-#define ARENA_COLS 32
-#define ARENA_ROWS 24
+#define TILE_SIZE 20
+#define ARENA_COLS 40
+#define ARENA_ROWS 30
 
 typedef enum {
   TILE_FLOOR = 0,
