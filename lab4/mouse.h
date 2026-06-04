@@ -11,6 +11,7 @@ int (mouse_unsubscribe_int)();
 void (mouse_ih)();
 uint8_t (mouse_get_byte)();
 bool (mouse_get_error)();
+int (mouse_read_pending_byte)(uint8_t *byte);
 
 int (mouse_write_command)(uint8_t command);
 int (mouse_enable_data_reporting_custom)();

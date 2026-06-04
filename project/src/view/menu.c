@@ -129,8 +129,11 @@ void menu_state_move_cursor(MenuState *menu, int16_t dx, int16_t dy) {
   int candidate_x = (int)menu->cursor_x + (int)dx;
   int candidate_y = (int)menu->cursor_y - (int)dy;
 
-  if (candidate_x < 0 || candidate_x > max_x) return;
-  if (candidate_y < 0 || candidate_y > max_y) return;
+  if (candidate_x < 0) candidate_x = 0;
+  else if (candidate_x > max_x) candidate_x = max_x;
+
+  if (candidate_y < 0) candidate_y = 0;
+  else if (candidate_y > max_y) candidate_y = max_y;
 
   menu->cursor_x = (int16_t)candidate_x;
   menu->cursor_y = (int16_t)candidate_y;

@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "i8042.h"
+#include "mouse.h"
 
 static int mouse_hook_id = MOUSE_IRQ;
 static uint8_t mouse_byte = 0;
@@ -70,20 +71,31 @@ int (mouse_unsubscribe_int)() {
 }
 
 void (mouse_ih)() {
+  uint8_t byte;
+  (void) mouse_read_pending_byte(&byte);
+}
+
+int (mouse_read_pending_byte)(uint8_t *byte) {
   uint8_t status;
   uint8_t data;
+
+  if (byte == NULL) return -1;
+
   mouse_error = true;
 
-  if (util_sys_inb(KBC_STAT_REG, &status) != 0) return;
+  if (util_sys_inb(KBC_STAT_REG, &status) != 0) return -1;
 
-  if (status & KBC_OBF) {
-    if (util_sys_inb(KBC_OUT_BUF, &data) != 0) return;
+  if (!(status & KBC_OBF)) return 0;
+  if (!(status & KBC_AUX)) return 0;
 
-    if ((status & (KBC_PARITY | KBC_TIMEOUT)) == 0 && (status & KBC_AUX) != 0) {
-      mouse_byte = data;
-      mouse_error = false;
-    }
-  }
+  if (util_sys_inb(KBC_OUT_BUF, &data) != 0) return -1;
+
+  if ((status & (KBC_PARITY | KBC_TIMEOUT)) != 0) return -1;
+
+  mouse_byte = data;
+  *byte = data;
+  mouse_error = false;
+  return 1;
 }
 
 uint8_t (mouse_get_byte)() {
