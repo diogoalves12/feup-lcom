@@ -13,6 +13,8 @@
 #include "game_input.h"
 #include "game_over.h"
 #include "game_state.h"
+#include "item.h"
+#include "item_draw.h"
 #include "keyboard.h"
 #include "keyboard_input.h"
 #include "menu.h"
@@ -22,6 +24,8 @@
 #include "player.h"
 #include "player_view.h"
 #include "renderer.h"
+
+#define TELEPORT_COOLDOWN_FRAMES 30
 
 typedef struct {
   GameState        state;
@@ -35,6 +39,10 @@ typedef struct {
   Player           player1;
   Player           player2;
   CombatState      combat;
+  ItemManager      items;
+  uint32_t         gameplay_frame_counter;
+  uint32_t         player1_next_teleport_frame;
+  uint32_t         player2_next_teleport_frame;
   MenuState        menu;
   PauseMenuState   pause_menu;
   GameOverState    game_over;
@@ -129,6 +137,10 @@ static int game_setup(Game *game) {
     printf("pause_menu_state_load_assets failed, using fallback rendering.\n");
   if (player_view_load_assets(&game->player_assets) != 0)
     printf("player_view_load_assets failed, using fallback rendering.\n");
+  if (arena_view_load_assets() != 0)
+    printf("arena_view_load_assets failed, using fallback rendering.\n");
+  if (item_view_load_assets() != 0)
+    printf("item_view_load_assets failed, using fallback rendering.\n");
   combat_init(&game->combat);
 
   game->state = GAME_STATE_MENU;
@@ -145,6 +157,8 @@ static int game_shutdown(Game *game) {
   pause_menu_state_destroy_assets(&game->pause_menu);
   game_over_state_destroy_assets(&game->game_over);
   player_view_destroy_assets(&game->player_assets);
+  item_view_destroy_assets();
+  arena_view_destroy_assets();
   if (renderer_shutdown() != 0) {
     printf("renderer_shutdown failed.\n");
     return 1;
@@ -158,7 +172,35 @@ static void game_start_match(Game *game) {
   player_init(&game->player2, arena_get_player2_spawn(&game->arena), PLAYER2_INITIAL_ANGLE, PLAYER2_COLOR);
 
   combat_reset(&game->combat);
+  item_manager_init(&game->items, game->selected_difficulty);
+  game->gameplay_frame_counter = 0;
+  game->player1_next_teleport_frame = 0;
+  game->player2_next_teleport_frame = 0;
   game->frame_counter = 0;
+}
+
+static void try_player_teleport(Game *game, Player *player, int player_num) {
+  if (game == NULL || player == NULL || !player->alive) return;
+
+  uint32_t *next_allowed = (player_num == 1)
+    ? &game->player1_next_teleport_frame
+    : &game->player2_next_teleport_frame;
+
+  if (game->gameplay_frame_counter < *next_allowed) return;
+
+  int col = player->position.x / TILE_SIZE;
+  int row = player->position.y / TILE_SIZE;
+
+  TileType type = arena_get_tile_type(&game->arena, row, col);
+  if (!arena_is_teleporter_tile(type)) return;
+
+  Position destination;
+  if (!arena_get_teleporter_destination(&game->arena, type, &destination)) return;
+
+  if (collision_player_walls(&game->arena, player, destination)) return;
+
+  player_set_position(player, destination);
+  *next_allowed = game->gameplay_frame_counter + TELEPORT_COOLDOWN_FRAMES;
 }
 
 static void game_apply_transition(Game *game, GameState next) {
@@ -404,11 +446,17 @@ static void state_playing_update(Game *game) {
     return;
   }
 
+  game->gameplay_frame_counter++;
+
   update_player_movement(&game->player1, &game->actions.player1, &game->arena);
+  try_player_teleport(game, &game->player1, 1);
   try_player_shot(game, 1, &game->player1, &game->player2, game->actions.player1.shoot);
 
   update_player_movement(&game->player2, &game->actions.player2, &game->arena);
+  try_player_teleport(game, &game->player2, 2);
   try_player_shot(game, 2, &game->player2, &game->player1, game->actions.player2.shoot);
+
+  item_manager_update(&game->items, &game->player1, &game->player2, game->gameplay_frame_counter);
 
   update_game_over_if_needed(game);
 }
@@ -472,7 +520,8 @@ static void draw_shot_effect(const ShotEffect *shot, uint32_t frame_counter, con
 
 static int render_playing(const Game *game) {
   if (renderer_clear(PROJECT_BG_COLOR) != 0) return 1;
-  if (arena_view_draw(&game->arena) != 0) return 1;
+  if (arena_view_draw(&game->arena, game->frame_counter) != 0) return 1;
+  if (item_view_draw(&game->items, game->frame_counter) != 0) return 1;
   draw_shot_effect(&game->combat.last_shot, game->frame_counter, &game->player_assets);
   if (player_view_draw(&game->player1, &game->player_assets, 1) != 0) return 1;
   if (player_view_draw(&game->player2, &game->player_assets, 2) != 0) return 1;
@@ -482,7 +531,8 @@ static int render_playing(const Game *game) {
 
 static int render_paused(const Game *game) {
   if (renderer_clear(PROJECT_BG_COLOR) != 0) return 1;
-  if (arena_view_draw(&game->arena) != 0) return 1;
+  if (arena_view_draw(&game->arena, game->frame_counter) != 0) return 1;
+  if (item_view_draw(&game->items, game->frame_counter) != 0) return 1;
   if (player_view_draw(&game->player1, &game->player_assets, 1) != 0) return 1;
   if (player_view_draw(&game->player2, &game->player_assets, 2) != 0) return 1;
   render_hud(game);

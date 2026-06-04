@@ -46,6 +46,17 @@ void player_damage(Player *player, int damage) {
   }
 }
 
+void player_heal(Player *player, int amount) {
+  if (player == NULL || amount <= 0 || !player->alive) {
+    return;
+  }
+
+  player->health += amount;
+  if (player->health > PLAYER_DEFAULT_HEALTH) {
+    player->health = PLAYER_DEFAULT_HEALTH;
+  }
+}
+
 void player_set_position(Player *player, Position position) {
   if (player == NULL) {
     return;
