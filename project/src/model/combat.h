@@ -34,6 +34,6 @@ typedef struct {
 void combat_init(CombatState *combat);
 void combat_reset(CombatState *combat);
 
-bool combat_try_shoot(CombatState *combat, int shooter_num, const Player *shooter, Player *target, const Arena *arena, uint32_t frame_counter);
+bool combat_try_shoot(CombatState *combat, int shooter_num, const Player *shooter, Player *target, Arena *arena, uint32_t frame_counter);
 
 #endif
