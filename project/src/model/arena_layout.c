@@ -8,6 +8,14 @@ static void add_rect(Arena *arena, Rect rect) {
   }
 }
 
+static void add_breakable_rect(Arena *arena, Rect rect) {
+  for (int row = rect.row; row < rect.row + rect.height; row++) {
+    for (int col = rect.col; col < rect.col + rect.width; col++) {
+      arena_set_breakable_wall(arena, row, col);
+    }
+  }
+}
+
 static void apply_easy(Arena *arena) {
   add_rect(arena, (Rect) {6, 10, 2, 2});
   add_rect(arena, (Rect) {22, 10, 2, 2});
@@ -28,6 +36,10 @@ static void apply_medium(Arena *arena) {
   add_rect(arena, (Rect) {21, 29, 2, 2});
   add_rect(arena, (Rect) {11, 5, 1, 2});
   add_rect(arena, (Rect) {17, 5, 1, 2});
+
+  add_breakable_rect(arena, (Rect) {14, 19, 2, 2});
+  add_breakable_rect(arena, (Rect) {10, 10, 1, 2});
+  add_breakable_rect(arena, (Rect) {19, 10, 1, 2});
 }
 
 static void apply_hard(Arena *arena) {
@@ -45,6 +57,11 @@ static void apply_hard(Arena *arena) {
   add_rect(arena, (Rect) {17, 28, 3, 1});
   add_rect(arena, (Rect) {9, 33, 2, 2});
   add_rect(arena, (Rect) {19, 33, 2, 2});
+
+  add_breakable_rect(arena, (Rect) {14, 15, 2, 2});
+  add_breakable_rect(arena, (Rect) {14, 23, 2, 2});
+  add_breakable_rect(arena, (Rect) {8, 20, 2, 1});
+  add_breakable_rect(arena, (Rect) {21, 20, 2, 1});
 }
 
 void arena_layout_apply(Arena *arena, ArenaDifficulty difficulty) {

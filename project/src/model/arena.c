@@ -26,6 +26,31 @@ void arena_set_tile(Arena *arena, int row, int col, TileType type) {
   }
 
   arena->tiles[row][col].type = type;
+  arena->tiles[row][col].hp = (type == TILE_BREAKABLE_WALL) ? BREAKABLE_WALL_HP : 0;
+}
+
+void arena_set_breakable_wall(Arena *arena, int row, int col) {
+  arena_set_tile(arena, row, col, TILE_BREAKABLE_WALL);
+}
+
+bool arena_damage_tile(Arena *arena, int row, int col, uint8_t damage) {
+  if (arena == NULL || !inside_bounds(row, col)) {
+    return false;
+  }
+
+  ArenaTile *tile = &arena->tiles[row][col];
+  if (tile->type != TILE_BREAKABLE_WALL) {
+    return false;
+  }
+
+  if (damage >= tile->hp) {
+    tile->type = TILE_FLOOR;
+    tile->hp = 0;
+    return true;
+  }
+
+  tile->hp -= damage;
+  return false;
 }
 
 static void clear_tiles(Arena *arena) {
@@ -95,5 +120,9 @@ TileType arena_get_tile_type(const Arena *arena, int row, int col) {
 }
 
 bool arena_is_wall_tile(TileType type) {
-  return type == TILE_WALL;
+  return type == TILE_WALL || type == TILE_BREAKABLE_WALL;
+}
+
+bool arena_is_breakable_wall_tile(TileType type) {
+  return type == TILE_BREAKABLE_WALL;
 }

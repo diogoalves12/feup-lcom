@@ -28,7 +28,7 @@ static bool point_inside_player(int px, int py, const Player *player) {
   return px >= hitbox_left && px <= hitbox_right && py >= hitbox_top && py <= hitbox_bottom;
 }
 
-bool combat_try_shoot(CombatState *combat, int shooter_num, const Player *shooter, Player *target, const Arena *arena, uint32_t frame_counter) {
+bool combat_try_shoot(CombatState *combat, int shooter_num, const Player *shooter, Player *target, Arena *arena, uint32_t frame_counter) {
   if (combat == NULL || shooter == NULL || target == NULL || arena == NULL) return false;
   if (shooter_num != 1 && shooter_num != 2) return false;
 
@@ -64,7 +64,14 @@ bool combat_try_shoot(CombatState *combat, int shooter_num, const Player *shoote
 
     int tile_col = pixel_x / TILE_SIZE;
     int tile_row = pixel_y / TILE_SIZE;
-    if (arena_is_wall_tile(arena_get_tile_type(arena, tile_row, tile_col))) break;
+    TileType tile_type = arena_get_tile_type(arena, tile_row, tile_col);
+    if (arena_is_breakable_wall_tile(tile_type)) {
+      end_x = pixel_x;
+      end_y = pixel_y;
+      arena_damage_tile(arena, tile_row, tile_col, COMBAT_DAMAGE);
+      break;
+    }
+    if (arena_is_wall_tile(tile_type)) break;
 
     end_x = pixel_x;
     end_y = pixel_y;
