@@ -22,10 +22,10 @@ int item_view_load_assets(void);
 void item_view_destroy_assets(void);
 
 /**
- * @brief Draws all active items in the ItemManager.
+ * @brief Draws all active items in the item pool.
  *
  * Inactive items are skipped.
  */
-int item_view_draw(const ItemManager *manager, uint32_t frame_counter);
+int item_view_draw(const ItemPool *pool, uint32_t frame_counter);
 
 #endif

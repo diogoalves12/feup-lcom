@@ -31,18 +31,18 @@
 
 typedef struct {
   GameState        state;
-  uint32_t         frame_counter;
+  uint32_t         global_frame;
   KeyboardInput    keyboard;
   MouseInput       mouse;
   uint8_t          mouse_packet[3];
-  uint8_t          mouse_packet_idx;
+  uint8_t          mouse_packet_byte_count;
   GameInputActions actions;
   Arena            arena;
   Player           player1;
   Player           player2;
   CombatState      combat;
-  ItemManager      items;
-  uint32_t         gameplay_frame_counter;
+  ItemPool         items;
+  uint32_t         match_frame;
   MenuState        menu;
   PauseMenuState   pause_menu;
   GameOverState    game_over;
@@ -175,23 +175,23 @@ static int game_load_assets(Game *game) {
 static int game_setup(Game *game) {
   if (game == NULL) return 1;
 
-  if (renderer_init(PROJECT_VIDEO_MODE) != 0) {
-    printf("renderer_init failed for mode 0x%03X.\n", PROJECT_VIDEO_MODE);
+  if (renderer_init(GRAPHICS_MODE) != 0) {
+    printf("renderer_init failed for mode 0x%03X.\n", GRAPHICS_MODE);
     return 1;
   }
 
   keyboard_input_init(&game->keyboard);
   mouse_input_init(&game->mouse);
-  game->mouse_packet_idx = 0;
+  game->mouse_packet_byte_count = 0;
   game_input_actions_init(&game->actions);
-  game->frame_counter = 0;
+  game->global_frame = 0;
   game->restart_requested = false;
 
   game_over_state_init(&game->game_over, 0);
   pause_menu_state_init(&game->pause_menu);
   log_screen_init(&game->log_screen);
-  sprite_init(&game->player_assets.p1);
-  sprite_init(&game->player_assets.p2);
+  sprite_init(&game->player_assets.player1);
+  sprite_init(&game->player_assets.player2);
   sprite_init(&game->player_assets.bullet);
   match_log_init(&game->match_log);
   game->game_over_logged = false;
@@ -230,16 +230,16 @@ static void game_start_match(Game *game) {
   player_init(&game->player2, arena_get_player2_spawn(&game->arena), PLAYER2_INITIAL_ANGLE, PLAYER2_COLOR);
 
   combat_init(&game->combat);
-  item_manager_init(&game->items, game->selected_difficulty);
-  game->gameplay_frame_counter = 0;
-  game->frame_counter = 0;
+  item_pool_init(&game->items, game->selected_difficulty);
+  game->match_frame = 0;
+  game->global_frame = 0;
   game->game_over_logged = false;
 }
 
 static void try_player_teleport(Game *game, Player *player) {
   if (game == NULL || player == NULL || !player->alive) return;
 
-  if (game->gameplay_frame_counter < player->next_teleport_frame) return;
+  if (game->match_frame < player->next_allowed_teleport_frame) return;
 
   int col = player->position.x / TILE_SIZE;
   int row = player->position.y / TILE_SIZE;
@@ -253,7 +253,7 @@ static void try_player_teleport(Game *game, Player *player) {
   if (collision_player_walls(&game->arena, player, destination)) return;
 
   player_set_position(player, destination);
-  player->next_teleport_frame = game->gameplay_frame_counter + TELEPORT_COOLDOWN_FRAMES;
+  player->next_allowed_teleport_frame = game->match_frame + TELEPORT_COOLDOWN_FRAMES;
 }
 
 static void game_apply_transition(Game *game, GameState next) {
@@ -356,7 +356,7 @@ static int game_disable_mouse(void) {
 
 static void game_handle_timer_interrupt(Game *game) {
   timer_int_handler();
-  game->frame_counter++;
+  game->global_frame++;
   game_tick(game);
 }
 
@@ -378,7 +378,7 @@ static void game_handle_mouse_interrupt(Game *game) {
   while ((status = mouse_read_pending_byte(&byte)) > 0) {
     game_process_mouse_byte(game, byte);
   }
-  if (status < 0) game->mouse_packet_idx = 0;
+  if (status < 0) game->mouse_packet_byte_count = 0;
 }
 
 static void game_handle_mouse_playing_interrupt(Game *game) {
@@ -386,17 +386,17 @@ static void game_handle_mouse_playing_interrupt(Game *game) {
   int status;
   struct packet pkt;
   while ((status = mouse_read_pending_byte(&byte)) > 0) {
-    if (mouse_sync_byte(byte, game->mouse_packet, &game->mouse_packet_idx)) {
+    if (mouse_sync_byte(byte, game->mouse_packet, &game->mouse_packet_byte_count)) {
       mouse_parse_packet_bytes(game->mouse_packet, &pkt);
-      mouse_input_set(&game->mouse, pkt.lb, pkt.rb, false);
+      mouse_input_set(&game->mouse, pkt.lb, pkt.rb);
     }
   }
-  if (status < 0) game->mouse_packet_idx = 0;
+  if (status < 0) game->mouse_packet_byte_count = 0;
 }
 
 static void game_process_mouse_byte(Game *game, uint8_t byte) {
   struct packet pkt;
-  if (mouse_sync_byte(byte, game->mouse_packet, &game->mouse_packet_idx)) {
+  if (mouse_sync_byte(byte, game->mouse_packet, &game->mouse_packet_byte_count)) {
     mouse_parse_packet_bytes(game->mouse_packet, &pkt);
     mouse_input_set(&game->mouse, pkt.lb, pkt.rb);
     if (!pkt.x_ov && !pkt.y_ov) {
@@ -465,7 +465,7 @@ static int game_loop(Game *game) {
 static void game_read_actions(Game *game) {
   game_input_actions_from_keyboard(&game->actions, &game->keyboard);
   game_input_actions_apply_mouse(&game->actions, &game->mouse);
-  keyboard_input_clear_oneshots(&game->keyboard);
+  keyboard_input_clear_frame_actions(&game->keyboard);
 }
 
 static void game_update(Game *game) {
@@ -545,21 +545,21 @@ static void state_playing_update(Game *game) {
     return;
   }
 
-  game->gameplay_frame_counter++;
+  game->match_frame++;
 
   update_player_movement(&game->player1, &game->actions.player1, &game->arena);
   try_player_teleport(game, &game->player1);
   if (game->actions.player1.shoot) {
-    combat_try_shoot(&game->combat, 1, &game->player1, &game->player2, &game->arena, game->frame_counter);
+    combat_try_shoot(&game->combat, 1, &game->player1, &game->player2, &game->arena, game->global_frame);
   }
 
   update_player_movement(&game->player2, &game->actions.player2, &game->arena);
   try_player_teleport(game, &game->player2);
   if (game->actions.player2.shoot) {
-    combat_try_shoot(&game->combat, 2, &game->player2, &game->player1, &game->arena, game->frame_counter);
+    combat_try_shoot(&game->combat, 2, &game->player2, &game->player1, &game->arena, game->global_frame);
   }
 
-  item_manager_update(&game->items, &game->player1, &game->player2, game->gameplay_frame_counter);
+  item_pool_update(&game->items, &game->player1, &game->player2, game->match_frame);
 
   update_game_over_if_needed(game);
 }
@@ -624,10 +624,10 @@ static void draw_shot_effect(const ShotEffect *shot, uint32_t frame_counter, con
 }
 
 static int render_playing(const Game *game) {
-  if (renderer_clear(PROJECT_BG_COLOR) != 0) return 1;
-  if (arena_view_draw(&game->arena, game->frame_counter) != 0) return 1;
-  if (item_view_draw(&game->items, game->frame_counter) != 0) return 1;
-  draw_shot_effect(&game->combat.last_shot, game->frame_counter, &game->player_assets);
+  if (renderer_clear(BACKGROUND_COLOR) != 0) return 1;
+  if (arena_view_draw(&game->arena, game->global_frame) != 0) return 1;
+  if (item_view_draw(&game->items, game->global_frame) != 0) return 1;
+  draw_shot_effect(&game->combat.last_shot, game->global_frame, &game->player_assets);
   if (player_view_draw(&game->player1, &game->player_assets, 1) != 0) return 1;
   if (player_view_draw(&game->player2, &game->player_assets, 2) != 0) return 1;
   render_hud(game);
@@ -635,9 +635,9 @@ static int render_playing(const Game *game) {
 }
 
 static int render_paused(const Game *game) {
-  if (renderer_clear(PROJECT_BG_COLOR) != 0) return 1;
-  if (arena_view_draw(&game->arena, game->frame_counter) != 0) return 1;
-  if (item_view_draw(&game->items, game->frame_counter) != 0) return 1;
+  if (renderer_clear(BACKGROUND_COLOR) != 0) return 1;
+  if (arena_view_draw(&game->arena, game->global_frame) != 0) return 1;
+  if (item_view_draw(&game->items, game->global_frame) != 0) return 1;
   if (player_view_draw(&game->player1, &game->player_assets, 1) != 0) return 1;
   if (player_view_draw(&game->player2, &game->player_assets, 2) != 0) return 1;
   render_hud(game);

@@ -15,9 +15,9 @@
  * @brief Sprites used by player rendering.
  */
 typedef struct {
-  Sprite p1;     /**< Player 1 sprite (blue soldier). */
-  Sprite p2;     /**< Player 2 sprite (red soldier). */
-  Sprite bullet; /**< Bullet sprite used by draw_shot_effect in game.c. */
+  Sprite player1; /**< Player 1 sprite (blue soldier). */
+  Sprite player2; /**< Player 2 sprite (red soldier). */
+  Sprite bullet;  /**< Bullet sprite used by draw_shot_effect in game.c. */
 } PlayerViewAssets;
 
 /**
@@ -33,7 +33,7 @@ void player_view_destroy_assets(PlayerViewAssets *assets);
 /**
  * @brief Draws one player centered at its position.
  */
-int player_view_draw(const Player *player, const PlayerViewAssets *assets, int player_num);
+int player_view_draw(const Player *player, const PlayerViewAssets *assets, int player_id);
 
 /**
  * @brief Draws the player's health bar at the given HUD position.

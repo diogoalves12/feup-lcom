@@ -26,7 +26,7 @@ void keyboard_input_init(KeyboardInput *input) {
   input->_extended = false;
 }
 
-void keyboard_input_clear_oneshots(KeyboardInput *input) {
+void keyboard_input_clear_frame_actions(KeyboardInput *input) {
   if (input == NULL) return;
   input->nav_up = false;
   input->nav_down = false;

@@ -22,14 +22,14 @@ static bool point_inside_player(int px, int py, const Player *player) {
   return px >= hitbox_left && px <= hitbox_right && py >= hitbox_top && py <= hitbox_bottom;
 }
 
-bool combat_try_shoot(CombatState *combat, int shooter_num, Player *shooter, Player *target, Arena *arena, uint32_t frame_counter) {
+bool combat_try_shoot(CombatState *combat, int shooter_id, Player *shooter, Player *target, Arena *arena, uint32_t frame_counter) {
   if (combat == NULL || shooter == NULL || target == NULL || arena == NULL) return false;
-  if (shooter_num != 1 && shooter_num != 2) return false;
+  if (shooter_id != 1 && shooter_id != 2) return false;
 
-  if (frame_counter < shooter->next_shot_frame) return false;
+  if (frame_counter < shooter->next_allowed_shot_frame) return false;
   if (!shooter->alive || !target->alive) return false;
 
-  shooter->next_shot_frame = frame_counter + COMBAT_SHOT_COOLDOWN_TICKS;
+  shooter->next_allowed_shot_frame = frame_counter + COMBAT_SHOT_COOLDOWN_TICKS;
 
   float direction_x = cosf(shooter->angle);
   float direction_y = sinf(shooter->angle);
@@ -85,7 +85,7 @@ bool combat_try_shoot(CombatState *combat, int shooter_num, Player *shooter, Pla
   combat->last_shot.end.x = end_x;
   combat->last_shot.end.y = end_y;
   combat->last_shot.angle = shooter->angle;
-  combat->last_shot.shooter_num = shooter_num;
+  combat->last_shot.shooter_id = shooter_id;
   combat->last_shot.hit = hit;
   combat->last_shot.start_frame = frame_counter;
   combat->last_shot.expire_frame = frame_counter + COMBAT_SHOT_EFFECT_FRAMES;

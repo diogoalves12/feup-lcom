@@ -35,13 +35,13 @@ void item_view_destroy_assets(void) {
   }
 }
 
-int item_view_draw(const ItemManager *manager, uint32_t frame_counter) {
-  if (manager == NULL) return 1;
+int item_view_draw(const ItemPool *pool, uint32_t frame_counter) {
+  if (pool == NULL) return 1;
 
   uint32_t frame_index = (frame_counter / 8) % HEALTH_PICKUP_FRAME_COUNT;
 
-  for (int i = 0; i < manager->count; i++) {
-    const Item *item = &manager->items[i];
+  for (int i = 0; i < pool->count; i++) {
+    const Item *item = &pool->items[i];
     if (!item->active) continue;
 
     int draw_x = item->position.x - TILE_SIZE / 2;

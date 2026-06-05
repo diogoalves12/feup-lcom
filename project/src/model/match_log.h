@@ -21,19 +21,19 @@
  * @brief One completed match.
  */
 typedef struct {
-  RtcDateTime     timestamp;       /**< Date and time when the match ended. */
-  int             winner;          /**< Winning player number (1 or 2). */
-  ArenaDifficulty difficulty;      /**< Difficulty of the completed match. */
-  bool            valid_timestamp; /**< False if the RTC read failed. */
-  bool            valid;           /**< False for unused slots in the log. */
+  RtcDateTime timestamp;       /**< Date and time when the match ended. */
+  int winner;                  /**< Winning player number (1 or 2). */
+  ArenaDifficulty difficulty;  /**< Difficulty of the completed match. */
+  bool valid_timestamp;       /**< False if the RTC read failed. */
+  bool valid;                 /**< False for unused slots in the log. */
 } MatchLogEntry;
 
 /**
- * @brief Fixed-size list of recent match results.
+ * @brief Fixed size list of recent match results.
  */
 typedef struct {
-  MatchLogEntry entries[MAX_MATCH_LOGS]; /**< Entry pool. */
-  uint8_t       count;                   /**< Number of valid entries currently stored. */
+  MatchLogEntry entries[MAX_MATCH_LOGS];  /**< Entry pool. */
+  uint8_t count;                          /**< Number of valid entries currently stored. */
 } MatchLog;
 
 /**

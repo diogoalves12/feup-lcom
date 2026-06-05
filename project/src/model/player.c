@@ -15,8 +15,8 @@ void player_init(Player *player, Position spawn, float angle, uint32_t color) {
   player->width = PLAYER_DEFAULT_WIDTH;
   player->height = PLAYER_DEFAULT_HEIGHT;
   player->color = color;
-  player->next_teleport_frame = 0;
-  player->next_shot_frame = 0;
+  player->next_allowed_teleport_frame = 0;
+  player->next_allowed_shot_frame = 0;
 }
 
 bool player_is_alive(const Player *player) {

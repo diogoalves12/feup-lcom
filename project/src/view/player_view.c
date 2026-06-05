@@ -24,19 +24,19 @@ int player_view_health_bar_width(void) {
 
 int player_view_load_assets(PlayerViewAssets *assets) {
   if (assets == NULL) return 1;
-  sprite_init(&assets->p1);
-  sprite_init(&assets->p2);
+  sprite_init(&assets->player1);
+  sprite_init(&assets->player2);
   sprite_init(&assets->bullet);
-  if (sprite_load(&assets->p1, player_gun_xpm) != 0) { player_view_destroy_assets(assets); return 1; }
-  if (sprite_load(&assets->p2, soldier1_gun_xpm) != 0) { player_view_destroy_assets(assets); return 1; }
+  if (sprite_load(&assets->player1, player_gun_xpm) != 0) { player_view_destroy_assets(assets); return 1; }
+  if (sprite_load(&assets->player2, soldier1_gun_xpm) != 0) { player_view_destroy_assets(assets); return 1; }
   if (sprite_load(&assets->bullet, bullet_small_xpm) != 0) { player_view_destroy_assets(assets); return 1; }
   return 0;
 }
 
 void player_view_destroy_assets(PlayerViewAssets *assets) {
   if (assets == NULL) return;
-  sprite_destroy(&assets->p1);
-  sprite_destroy(&assets->p2);
+  sprite_destroy(&assets->player1);
+  sprite_destroy(&assets->player2);
   sprite_destroy(&assets->bullet);
 }
 
@@ -52,11 +52,11 @@ static int draw_direction_indicator(const Player *player) {
                                   PLAYER_INDICATOR_COLOR);
 }
 
-int player_view_draw(const Player *player, const PlayerViewAssets *assets, int player_num) {
+int player_view_draw(const Player *player, const PlayerViewAssets *assets, int player_id) {
   if (player == NULL || assets == NULL) return 1;
   if (!player->alive) return 0;
 
-  const Sprite *sprite = (player_num == 1) ? &assets->p1 : &assets->p2;
+  const Sprite *sprite = (player_id == 1) ? &assets->player1 : &assets->player2;
   if (sprite_draw_rotated(sprite,
                           player->position.x,
                           player->position.y,

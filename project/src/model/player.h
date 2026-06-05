@@ -14,21 +14,21 @@
 #include "config.h"
 #include "types.h"
 
-#define PLAYER_FULL_ROTATION   6.2831852f /**< Full rotation in radians (2*pi). */
+#define PLAYER_FULL_ROTATION 6.2831852f /**< Full rotation in radians (2*pi). */
 
 /**
  * @brief Runtime state for one player.
  */
 typedef struct {
-  Position position; /**< Current pixel-space center position. */
-  float    angle;    /**< Current facing angle in radians (0 = right). */
-  int      health;   /**< Remaining hit points. */
-  bool     alive;    /**< False once health reaches zero. */
+  Position position; /**< Current pixel space center position. */
+  float angle;       /**< Current facing angle in radians (0 = right). */
+  int health;        /**< Remaining hit points. */
+  bool alive;        /**< False once health reaches zero. */
   uint16_t width;    /**< Hitbox width in pixels. */
   uint16_t height;   /**< Hitbox height in pixels. */
   uint32_t color;    /**< Player accent color for HUD rendering. */
-  uint32_t next_teleport_frame; /**< Earliest gameplay frame when teleporting is allowed. */
-  uint32_t next_shot_frame;     /**< Earliest frame when shooting is allowed. */
+  uint32_t next_allowed_teleport_frame; /**< Earliest gameplay frame when teleporting is allowed. */
+  uint32_t next_allowed_shot_frame;     /**< Earliest frame when shooting is allowed. */
 } Player;
 
 /**
@@ -47,14 +47,14 @@ bool player_is_alive(const Player *player);
 void player_kill(Player *player);
 
 /**
- * @brief Reduces the player's health by @p damage.
+ * @brief Reduces the player health by @p damage.
  *
  * The player is killed when health reaches zero.
  */
 void player_damage(Player *player, int damage);
 
 /**
- * @brief Restores up to @p amount hit points, clamped to PLAYER_DEFAULT_HEALTH.
+ * @brief Restores up to @p amount hit points, fixed to PLAYER_DEFAULT_HEALTH.
  */
 void player_heal(Player *player, int amount);
 
@@ -64,7 +64,7 @@ void player_heal(Player *player, int amount);
 void player_set_position(Player *player, Position position);
 
 /**
- * @brief Advances the player's facing angle by @p delta_angle radians.
+ * @brief Advances the player facing angle by @p delta_angle radians.
  *
  * Wraps the angle to [0, PLAYER_FULL_ROTATION).
  */

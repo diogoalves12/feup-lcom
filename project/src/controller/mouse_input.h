@@ -2,12 +2,12 @@
  * @file mouse_input.h
  * @brief Mouse button state used by Player 2 and menus.
  *
- * Left and right buttons are mapped to gameplay actions. Mouse movement is
- * handled in game.c because each screen uses the cursor differently.
+ * Left and right buttons are mapped to gameplay actions.
+ * Mouse movement is handled in game.c because each screen implements it differently.
  *
  * Button mapping:
- *  - Left button (lb)  = move forward
- *  - Right button (rb) = shoot
+ *  Left button (lb) = move forward
+ *  Right button (rb) = shoot
  */
 #ifndef MOUSE_INPUT_H
 #define MOUSE_INPUT_H
@@ -16,11 +16,11 @@
 #include <stdint.h>
 
 /**
- * @brief Current mouse button state.
+ * @brief Mouse button state.
  */
 typedef struct {
-  bool move_forward; /**< True while the left mouse button is held. */
-  bool shoot;        /**< True while the right mouse button is held. */
+  bool move_forward; /**< True while the left mouse button is pressed. */
+  bool shoot;        /**< True while the right mouse button is pressed. */
 } MouseInput;
 
 /**
