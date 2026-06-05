@@ -18,6 +18,7 @@ typedef enum {
 typedef enum {
   MENU_SEL_START = 0,
   MENU_SEL_DIFFICULTY,
+  MENU_SEL_LOG,
   MENU_SEL_EXIT
 } MenuSelection;
 
@@ -37,6 +38,7 @@ typedef struct {
   Sprite            button_selected;
   Sprite            start_text;
   Sprite            difficulty_text;
+  Sprite            log_text;
   Sprite            exit_text;
   Sprite            select_diff_title;
   Sprite            easy_text;

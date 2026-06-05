@@ -17,6 +17,8 @@
 #include "item_draw.h"
 #include "keyboard.h"
 #include "keyboard_input.h"
+#include "log_screen.h"
+#include "match_log.h"
 #include "menu.h"
 #include "mouse.h"
 #include "mouse_input.h"
@@ -24,6 +26,7 @@
 #include "player.h"
 #include "player_view.h"
 #include "renderer.h"
+#include "rtc.h"
 
 #define TELEPORT_COOLDOWN_FRAMES 30
 
@@ -46,8 +49,11 @@ typedef struct {
   MenuState        menu;
   PauseMenuState   pause_menu;
   GameOverState    game_over;
+  LogScreenState   log_screen;
+  MatchLog         match_log;
   PlayerViewAssets player_assets;
   bool             restart_requested;
+  bool             game_over_logged;
   ArenaDifficulty  selected_difficulty;
 } Game;
 
@@ -75,6 +81,9 @@ static void state_menu_update(Game *game);
 static void state_playing_update(Game *game);
 static void state_paused_update(Game *game);
 static void state_game_over_update(Game *game);
+static void state_log_update(Game *game);
+
+static void record_match_log_entry(Game *game, int winner);
 
 static int  render_playing(const Game *game);
 static int  render_paused(const Game *game);
@@ -98,15 +107,38 @@ static void try_player_shot(Game *game, int player_num, Player *shooter, Player 
 static bool update_game_over_if_needed(Game *game) {
   if (!player_is_alive(&game->player1)) {
     game->game_over.winner = 2;
+    record_match_log_entry(game, 2);
     game_apply_transition(game, GAME_STATE_GAME_OVER);
     return true;
   }
   if (!player_is_alive(&game->player2)) {
     game->game_over.winner = 1;
+    record_match_log_entry(game, 1);
     game_apply_transition(game, GAME_STATE_GAME_OVER);
     return true;
   }
   return false;
+}
+
+static void record_match_log_entry(Game *game, int winner) {
+  if (game == NULL || game->game_over_logged) return;
+
+  MatchLogEntry entry;
+  entry.winner = winner;
+  entry.difficulty = game->selected_difficulty;
+  entry.valid = true;
+  entry.valid_timestamp = (rtc_read_datetime(&entry.timestamp) == 0);
+  if (!entry.valid_timestamp) {
+    entry.timestamp.second = 0;
+    entry.timestamp.minute = 0;
+    entry.timestamp.hour = 0;
+    entry.timestamp.day = 0;
+    entry.timestamp.month = 0;
+    entry.timestamp.year = 0;
+  }
+
+  match_log_add(&game->match_log, &entry);
+  game->game_over_logged = true;
 }
 
 static void render_hud(const Game *game) {
@@ -135,6 +167,13 @@ static int game_setup(Game *game) {
   pause_menu_state_init(&game->pause_menu);
   if (pause_menu_state_load_assets(&game->pause_menu) != 0)
     printf("pause_menu_state_load_assets failed, using fallback rendering.\n");
+
+  log_screen_init(&game->log_screen);
+  if (log_screen_load_assets(&game->log_screen) != 0)
+    printf("log_screen_load_assets failed, using fallback rendering.\n");
+
+  match_log_init(&game->match_log);
+  game->game_over_logged = false;
   if (player_view_load_assets(&game->player_assets) != 0)
     printf("player_view_load_assets failed, using fallback rendering.\n");
   if (arena_view_load_assets() != 0)
@@ -156,6 +195,7 @@ static int game_shutdown(Game *game) {
   menu_state_destroy_assets(&game->menu);
   pause_menu_state_destroy_assets(&game->pause_menu);
   game_over_state_destroy_assets(&game->game_over);
+  log_screen_destroy_assets(&game->log_screen);
   player_view_destroy_assets(&game->player_assets);
   item_view_destroy_assets();
   arena_view_destroy_assets();
@@ -177,6 +217,7 @@ static void game_start_match(Game *game) {
   game->player1_next_teleport_frame = 0;
   game->player2_next_teleport_frame = 0;
   game->frame_counter = 0;
+  game->game_over_logged = false;
 }
 
 static void try_player_teleport(Game *game, Player *player, int player_num) {
@@ -225,6 +266,10 @@ static void game_apply_transition(Game *game, GameState next) {
     case GAME_STATE_GAME_OVER:
       game->game_over.selection = GAME_OVER_SEL_RESTART;
       game->game_over.prev_lb = game->mouse.move_forward;
+      break;
+    case GAME_STATE_LOG:
+      log_screen_reset(&game->log_screen);
+      game->log_screen.prev_lb = game->mouse.move_forward;
       break;
     default:
       break;
@@ -319,6 +364,8 @@ static void game_process_mouse_byte(Game *game, uint8_t byte) {
         pause_menu_state_move_cursor(&game->pause_menu, pkt.delta_x, pkt.delta_y);
       else if (game->state == GAME_STATE_GAME_OVER)
         game_over_state_move_cursor(&game->game_over, pkt.delta_x, pkt.delta_y);
+      else if (game->state == GAME_STATE_LOG)
+        log_screen_move_cursor(&game->log_screen, pkt.delta_x, pkt.delta_y);
     }
   }
 }
@@ -385,6 +432,7 @@ static void game_update(Game *game) {
     case GAME_STATE_PLAYING:   state_playing_update(game);   break;
     case GAME_STATE_PAUSED:    state_paused_update(game);    break;
     case GAME_STATE_GAME_OVER: state_game_over_update(game); break;
+    case GAME_STATE_LOG:       state_log_update(game);       break;
     case GAME_STATE_EXIT:      break;
   }
 }
@@ -416,6 +464,12 @@ static void game_render(Game *game) {
         result = 1;
       }
       break;
+    case GAME_STATE_LOG:
+      if (log_screen_render(&game->log_screen, &game->match_log) != 0) {
+        printf("log_screen_render failed.\n");
+        result = 1;
+      }
+      break;
     default: break;
   }
   if (result != 0) game->state = GAME_STATE_EXIT;
@@ -429,6 +483,8 @@ static void game_tick(Game *game) {
     pause_menu_state_apply_mouse(&game->pause_menu, &game->mouse, &game->actions);
   else if (game->state == GAME_STATE_GAME_OVER)
     game_over_state_apply_mouse(&game->game_over, &game->mouse, &game->actions);
+  else if (game->state == GAME_STATE_LOG)
+    log_screen_apply_mouse(&game->log_screen, &game->mouse, &game->actions);
   GameState state_before = game->state;
   game_update(game);
   if (game->state == state_before) game_render(game);
@@ -481,6 +537,12 @@ static void state_paused_update(Game *game) {
 static void state_game_over_update(Game *game) {
   GameState next = game->state;
   game_over_state_update(&game->game_over, &game->actions, &next);
+  game_apply_transition(game, next);
+}
+
+static void state_log_update(Game *game) {
+  GameState next = game->state;
+  log_screen_update(&game->log_screen, &game->actions, &next);
   game_apply_transition(game, next);
 }
 
