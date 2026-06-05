@@ -161,26 +161,11 @@ int renderer_present(void) {
 }
 
 int renderer_shutdown(void) {
-  if (!renderer_is_initialized) {
-    if (renderer_back_buffer != NULL) {
-      free(renderer_back_buffer);
-      renderer_back_buffer = NULL;
-    }
+  int result = 0;
 
-    renderer_reset_state();
-    return 0;
-  }
-
-  if (vg_exit() != 0) {
+  if (renderer_is_initialized && vg_exit() != 0) {
     printf("%s: failed to return to text mode\n", __func__);
-
-    if (renderer_back_buffer != NULL) {
-      free(renderer_back_buffer);
-      renderer_back_buffer = NULL;
-    }
-
-    renderer_reset_state();
-    return 1;
+    result = 1;
   }
 
   if (renderer_back_buffer != NULL) {
@@ -189,5 +174,5 @@ int renderer_shutdown(void) {
   }
 
   renderer_reset_state();
-  return 0;
+  return result;
 }

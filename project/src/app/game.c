@@ -27,8 +27,7 @@
 #include "player_view.h"
 #include "renderer.h"
 #include "rtc.h"
-
-#define TELEPORT_COOLDOWN_FRAMES 30
+#include "sprite.h"
 
 typedef struct {
   GameState        state;
@@ -44,8 +43,6 @@ typedef struct {
   CombatState      combat;
   ItemManager      items;
   uint32_t         gameplay_frame_counter;
-  uint32_t         player1_next_teleport_frame;
-  uint32_t         player2_next_teleport_frame;
   MenuState        menu;
   PauseMenuState   pause_menu;
   GameOverState    game_over;
@@ -58,6 +55,7 @@ typedef struct {
 } Game;
 
 static int  game_setup(Game *game);
+static int  game_load_assets(Game *game);
 static int  game_loop(Game *game);
 static int  game_shutdown(Game *game);
 
@@ -96,12 +94,6 @@ static void update_player_movement(Player *player, const PlayerInputActions *inp
       player_set_position(player, next_position);
   } else {
     player_rotate(player, PLAYER_ROTATION_STEP);
-  }
-}
-
-static void try_player_shot(Game *game, int player_num, Player *shooter, Player *target, bool action_shoot) {
-  if (action_shoot) {
-    combat_try_shoot(&game->combat, player_num, shooter, target, &game->arena, game->frame_counter);
   }
 }
 
@@ -147,6 +139,39 @@ static void render_hud(const Game *game) {
   player_view_draw_health_bar(&game->player2, ARENA_PIXEL_WIDTH - 15 - player_view_health_bar_width(), 12);
 }
 
+static int game_load_assets(Game *game) {
+  if (game_over_state_load_assets(&game->game_over) != 0) {
+    printf("game_over_state_load_assets failed.\n");
+    return 1;
+  }
+  if (pause_menu_state_load_assets(&game->pause_menu) != 0) {
+    printf("pause_menu_state_load_assets failed.\n");
+    return 1;
+  }
+  if (log_screen_load_assets(&game->log_screen) != 0) {
+    printf("log_screen_load_assets failed.\n");
+    return 1;
+  }
+  if (player_view_load_assets(&game->player_assets) != 0) {
+    printf("player_view_load_assets failed.\n");
+    return 1;
+  }
+  if (arena_view_load_assets() != 0) {
+    printf("arena_view_load_assets failed.\n");
+    return 1;
+  }
+  if (item_view_load_assets() != 0) {
+    printf("item_view_load_assets failed.\n");
+    return 1;
+  }
+  if (menu_state_load_assets(&game->menu) != 0) {
+    printf("menu_state_load_assets failed.\n");
+    return 1;
+  }
+
+  return 0;
+}
+
 static int game_setup(Game *game) {
   if (game == NULL) return 1;
 
@@ -161,33 +186,25 @@ static int game_setup(Game *game) {
   game_input_actions_init(&game->actions);
   game->frame_counter = 0;
   game->restart_requested = false;
+
   game_over_state_init(&game->game_over, 0);
-  if (game_over_state_load_assets(&game->game_over) != 0)
-    printf("game_over_state_load_assets failed, using fallback rendering.\n");
-
   pause_menu_state_init(&game->pause_menu);
-  if (pause_menu_state_load_assets(&game->pause_menu) != 0)
-    printf("pause_menu_state_load_assets failed, using fallback rendering.\n");
-
   log_screen_init(&game->log_screen);
-  if (log_screen_load_assets(&game->log_screen) != 0)
-    printf("log_screen_load_assets failed, using fallback rendering.\n");
-
+  sprite_init(&game->player_assets.p1);
+  sprite_init(&game->player_assets.p2);
+  sprite_init(&game->player_assets.bullet);
   match_log_init(&game->match_log);
   game->game_over_logged = false;
-  if (player_view_load_assets(&game->player_assets) != 0)
-    printf("player_view_load_assets failed, using fallback rendering.\n");
-  if (arena_view_load_assets() != 0)
-    printf("arena_view_load_assets failed, using fallback rendering.\n");
-  if (item_view_load_assets() != 0)
-    printf("item_view_load_assets failed, using fallback rendering.\n");
   combat_init(&game->combat);
 
   game->state = GAME_STATE_MENU;
   game->selected_difficulty = DEFAULT_ARENA_DIFFICULTY;
   menu_state_init(&game->menu);
-  if (menu_state_load_assets(&game->menu) != 0)
-    printf("menu_state_load_assets failed, using fallback rendering.\n");
+
+  if (game_load_assets(game) != 0) {
+    game_shutdown(game);
+    return 1;
+  }
 
   return 0;
 }
@@ -212,23 +229,17 @@ static void game_start_match(Game *game) {
   player_init(&game->player1, arena_get_player1_spawn(&game->arena), PLAYER1_INITIAL_ANGLE, PLAYER1_COLOR);
   player_init(&game->player2, arena_get_player2_spawn(&game->arena), PLAYER2_INITIAL_ANGLE, PLAYER2_COLOR);
 
-  combat_reset(&game->combat);
+  combat_init(&game->combat);
   item_manager_init(&game->items, game->selected_difficulty);
   game->gameplay_frame_counter = 0;
-  game->player1_next_teleport_frame = 0;
-  game->player2_next_teleport_frame = 0;
   game->frame_counter = 0;
   game->game_over_logged = false;
 }
 
-static void try_player_teleport(Game *game, Player *player, int player_num) {
+static void try_player_teleport(Game *game, Player *player) {
   if (game == NULL || player == NULL || !player->alive) return;
 
-  uint32_t *next_allowed = (player_num == 1)
-    ? &game->player1_next_teleport_frame
-    : &game->player2_next_teleport_frame;
-
-  if (game->gameplay_frame_counter < *next_allowed) return;
+  if (game->gameplay_frame_counter < player->next_teleport_frame) return;
 
   int col = player->position.x / TILE_SIZE;
   int row = player->position.y / TILE_SIZE;
@@ -242,7 +253,7 @@ static void try_player_teleport(Game *game, Player *player, int player_num) {
   if (collision_player_walls(&game->arena, player, destination)) return;
 
   player_set_position(player, destination);
-  *next_allowed = game->gameplay_frame_counter + TELEPORT_COOLDOWN_FRAMES;
+  player->next_teleport_frame = game->gameplay_frame_counter + TELEPORT_COOLDOWN_FRAMES;
 }
 
 static void game_apply_transition(Game *game, GameState next) {
@@ -385,7 +396,7 @@ static void game_handle_mouse_playing_interrupt(Game *game) {
   }
 
   if (got_packet) {
-    mouse_input_set(&game->mouse, last_lb, last_rb, false);
+    mouse_input_set(&game->mouse, last_lb, last_rb);
   }
 }
 
@@ -393,7 +404,7 @@ static void game_process_mouse_byte(Game *game, uint8_t byte) {
   struct packet pkt;
   if (mouse_sync_byte(byte, game->mouse_packet, &game->mouse_packet_idx)) {
     mouse_parse_packet_bytes(game->mouse_packet, &pkt);
-    mouse_input_set(&game->mouse, pkt.lb, pkt.rb, pkt.mb);
+    mouse_input_set(&game->mouse, pkt.lb, pkt.rb);
     if (!pkt.x_ov && !pkt.y_ov) {
       if (game->state == GAME_STATE_MENU)
         menu_state_move_cursor(&game->menu, pkt.delta_x, pkt.delta_y);
@@ -543,12 +554,16 @@ static void state_playing_update(Game *game) {
   game->gameplay_frame_counter++;
 
   update_player_movement(&game->player1, &game->actions.player1, &game->arena);
-  try_player_teleport(game, &game->player1, 1);
-  try_player_shot(game, 1, &game->player1, &game->player2, game->actions.player1.shoot);
+  try_player_teleport(game, &game->player1);
+  if (game->actions.player1.shoot) {
+    combat_try_shoot(&game->combat, 1, &game->player1, &game->player2, &game->arena, game->frame_counter);
+  }
 
   update_player_movement(&game->player2, &game->actions.player2, &game->arena);
-  try_player_teleport(game, &game->player2, 2);
-  try_player_shot(game, 2, &game->player2, &game->player1, game->actions.player2.shoot);
+  try_player_teleport(game, &game->player2);
+  if (game->actions.player2.shoot) {
+    combat_try_shoot(&game->combat, 2, &game->player2, &game->player1, &game->arena, game->frame_counter);
+  }
 
   item_manager_update(&game->items, &game->player1, &game->player2, game->gameplay_frame_counter);
 
@@ -597,12 +612,8 @@ static void draw_shot_effect(const ShotEffect *shot, uint32_t frame_counter, con
   int cur_x = shot->start.x + (int) (progress * (float) dx);
   int cur_y = shot->start.y + (int) (progress * (float) dy);
 
-  /* bullet sprite or fallback */
-  if (assets != NULL && assets->bullet.loaded) {
+  if (assets != NULL) {
     sprite_draw_rotated(&assets->bullet, cur_x, cur_y, shot->angle);
-  } else {
-    if (cur_x >= 2 && cur_y >= 2 && cur_x < SCREEN_WIDTH - 2 && cur_y < SCREEN_HEIGHT - 2)
-      renderer_draw_rectangle((uint16_t) (cur_x - 2), (uint16_t) (cur_y - 2), 4, 4, 0xFFFF40);
   }
 
   /* impact cross at end point when the shot hit */

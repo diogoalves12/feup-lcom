@@ -6,7 +6,6 @@ static void player_input_clear(PlayerInputActions *p) {
   if (p == NULL) return;
   p->move_forward = false;
   p->shoot = false;
-  p->action = false;
 }
 
 void game_input_actions_init(GameInputActions *actions) {
@@ -25,7 +24,6 @@ void game_input_actions_from_keyboard(GameInputActions *actions, const KeyboardI
 
   actions->player1.move_forward = keyboard->move_forward;
   actions->player1.shoot = keyboard->shoot;
-  actions->player1.action = keyboard->action;
 
   player_input_clear(&actions->player2);
 
@@ -40,5 +38,4 @@ void game_input_actions_apply_mouse(GameInputActions *actions, const MouseInput 
   if (actions == NULL || mouse == NULL) return;
   actions->player2.move_forward = mouse->move_forward;
   actions->player2.shoot = mouse->shoot;
-  actions->player2.action = mouse->action;
 }

@@ -20,8 +20,6 @@
 #include "xpm/text/back.xpm"
 
 #define MENU_BG_COLOR       0x101010
-#define MENU_OPTION_COLOR   0x404040
-#define MENU_SELECTED_COLOR 0x00AAFF
 
 #define MENU_BTN_W  560
 #define MENU_BTN_H   90
@@ -36,6 +34,12 @@
 #define DIFF_MEDIUM_Y  240
 #define DIFF_HARD_Y    345
 #define DIFF_BACK_Y    450
+
+typedef struct {
+  const Sprite *label;
+  uint16_t      y;
+  int           selection_id;
+} MenuButtonView;
 
 static void menu_state_select_main_start(MenuState *menu) {
   menu->screen = MENU_SCREEN_MAIN;
@@ -62,7 +66,6 @@ void menu_state_init(MenuState *menu) {
   sprite_init(&menu->back_text);
   sprite_init(&menu->cursor);
   menu->prev_lb = false;
-  menu->assets_loaded = false;
 }
 
 int menu_state_load_assets(MenuState *menu) {
@@ -81,7 +84,6 @@ int menu_state_load_assets(MenuState *menu) {
   if (sprite_load(&menu->back_text, back) != 0) { menu_state_destroy_assets(menu); return 1; }
   if (sprite_load(&menu->cursor, pointer_b_shaded_xpm) != 0) { menu_state_destroy_assets(menu); return 1; }
 
-  menu->assets_loaded = true;
   return 0;
 }
 
@@ -99,7 +101,6 @@ void menu_state_destroy_assets(MenuState *menu) {
   sprite_destroy(&menu->hard_text);
   sprite_destroy(&menu->back_text);
   sprite_destroy(&menu->cursor);
-  menu->assets_loaded = false;
 }
 
 void menu_state_reset(MenuState *menu) {
@@ -215,73 +216,61 @@ static int draw_button(const MenuState *menu, bool selected,
   uint16_t by = (uint16_t)(slot_y + ((int)MENU_BTN_H - (int)btn->height) / 2);
   if (sprite_draw(btn, bx, by) != 0) return 1;
 
-  if (label->loaded) {
-    int lx = ((int)SCREEN_WIDTH - (int)label->width) / 2;
-    int ly = (int)slot_y + ((int)MENU_BTN_H - (int)label->height) / 2;
-    if (lx < 0) lx = 0;
-    if (ly < 0) ly = 0;
-    if (sprite_draw(label, (uint16_t)lx, (uint16_t)ly) != 0) return 1;
+  int lx = ((int)SCREEN_WIDTH - (int)label->width) / 2;
+  int ly = (int)slot_y + ((int)MENU_BTN_H - (int)label->height) / 2;
+  if (lx < 0) lx = 0;
+  if (ly < 0) ly = 0;
+  if (sprite_draw(label, (uint16_t)lx, (uint16_t)ly) != 0) return 1;
+  return 0;
+}
+
+static int render_button_list(const MenuState *menu,
+                              const MenuButtonView *buttons,
+                              size_t count,
+                              int selected_id) {
+  for (size_t i = 0; i < count; i++) {
+    if (draw_button(menu,
+                    buttons[i].selection_id == selected_id,
+                    buttons[i].label,
+                    buttons[i].y) != 0) return 1;
   }
+
   return 0;
 }
 
 static int render_main_screen_sprites(const MenuState *menu) {
   if (renderer_clear(MENU_BG_COLOR) != 0) return 1;
 
-  if (draw_button(menu, menu->selection == MENU_SEL_START, &menu->start_text, MENU_START_Y) != 0) return 1;
-  if (draw_button(menu, menu->selection == MENU_SEL_DIFFICULTY, &menu->difficulty_text, MENU_DIFFICULTY_Y) != 0) return 1;
-  if (draw_button(menu, menu->selection == MENU_SEL_LOG, &menu->log_text, MENU_LOG_Y) != 0) return 1;
-  if (draw_button(menu, menu->selection == MENU_SEL_EXIT, &menu->exit_text, MENU_EXIT_Y) != 0) return 1;
+  const MenuButtonView buttons[] = {
+    {&menu->start_text, MENU_START_Y, MENU_SEL_START},
+    {&menu->difficulty_text, MENU_DIFFICULTY_Y, MENU_SEL_DIFFICULTY},
+    {&menu->log_text, MENU_LOG_Y, MENU_SEL_LOG},
+    {&menu->exit_text, MENU_EXIT_Y, MENU_SEL_EXIT}
+  };
+  if (render_button_list(menu, buttons, sizeof(buttons) / sizeof(buttons[0]),
+                         menu->selection) != 0) return 1;
 
-  sprite_draw_clipped(&menu->cursor, menu->cursor_x, menu->cursor_y);
+  if (sprite_draw_clipped(&menu->cursor, menu->cursor_x, menu->cursor_y) != 0) return 1;
   return renderer_present();
 }
 
 static int render_difficulty_screen_sprites(const MenuState *menu) {
   if (renderer_clear(MENU_BG_COLOR) != 0) return 1;
 
-  if (menu->select_diff_title.loaded) {
-    int tx = ((int)SCREEN_WIDTH - (int)menu->select_diff_title.width) / 2;
-    if (tx < 0) tx = 0;
-    if (sprite_draw(&menu->select_diff_title, (uint16_t)tx, DIFF_TITLE_Y) != 0) return 1;
-  }
+  int tx = ((int)SCREEN_WIDTH - (int)menu->select_diff_title.width) / 2;
+  if (tx < 0) tx = 0;
+  if (sprite_draw(&menu->select_diff_title, (uint16_t)tx, DIFF_TITLE_Y) != 0) return 1;
 
-  if (draw_button(menu, menu->diff_selection == MENU_DIFF_SEL_EASY, &menu->easy_text, DIFF_EASY_Y) != 0) return 1;
-  if (draw_button(menu, menu->diff_selection == MENU_DIFF_SEL_MEDIUM, &menu->medium_text, DIFF_MEDIUM_Y) != 0) return 1;
-  if (draw_button(menu, menu->diff_selection == MENU_DIFF_SEL_HARD, &menu->hard_text, DIFF_HARD_Y) != 0) return 1;
-  if (draw_button(menu, menu->diff_selection == MENU_DIFF_SEL_BACK, &menu->back_text, DIFF_BACK_Y) != 0) return 1;
+  const MenuButtonView buttons[] = {
+    {&menu->easy_text, DIFF_EASY_Y, MENU_DIFF_SEL_EASY},
+    {&menu->medium_text, DIFF_MEDIUM_Y, MENU_DIFF_SEL_MEDIUM},
+    {&menu->hard_text, DIFF_HARD_Y, MENU_DIFF_SEL_HARD},
+    {&menu->back_text, DIFF_BACK_Y, MENU_DIFF_SEL_BACK}
+  };
+  if (render_button_list(menu, buttons, sizeof(buttons) / sizeof(buttons[0]),
+                         menu->diff_selection) != 0) return 1;
 
-  sprite_draw_clipped(&menu->cursor, menu->cursor_x, menu->cursor_y);
-  return renderer_present();
-}
-
-static int render_main_screen_fallback(const MenuState *menu) {
-  if (renderer_clear(MENU_BG_COLOR) != 0) return 1;
-
-  if (renderer_draw_rectangle(MENU_BTN_X, MENU_START_Y, MENU_BTN_W, MENU_BTN_H,
-        menu->selection == MENU_SEL_START ? MENU_SELECTED_COLOR : MENU_OPTION_COLOR) != 0) return 1;
-  if (renderer_draw_rectangle(MENU_BTN_X, MENU_DIFFICULTY_Y, MENU_BTN_W, MENU_BTN_H,
-        menu->selection == MENU_SEL_DIFFICULTY ? MENU_SELECTED_COLOR : MENU_OPTION_COLOR) != 0) return 1;
-  if (renderer_draw_rectangle(MENU_BTN_X, MENU_LOG_Y, MENU_BTN_W, MENU_BTN_H,
-        menu->selection == MENU_SEL_LOG ? MENU_SELECTED_COLOR : MENU_OPTION_COLOR) != 0) return 1;
-  if (renderer_draw_rectangle(MENU_BTN_X, MENU_EXIT_Y, MENU_BTN_W, MENU_BTN_H,
-        menu->selection == MENU_SEL_EXIT ? MENU_SELECTED_COLOR : MENU_OPTION_COLOR) != 0) return 1;
-
-  return renderer_present();
-}
-
-static int render_difficulty_screen_fallback(const MenuState *menu) {
-  if (renderer_clear(MENU_BG_COLOR) != 0) return 1;
-
-  if (renderer_draw_rectangle(MENU_BTN_X, DIFF_EASY_Y, MENU_BTN_W, MENU_BTN_H,
-        menu->diff_selection == MENU_DIFF_SEL_EASY ? MENU_SELECTED_COLOR : MENU_OPTION_COLOR) != 0) return 1;
-  if (renderer_draw_rectangle(MENU_BTN_X, DIFF_MEDIUM_Y, MENU_BTN_W, MENU_BTN_H,
-        menu->diff_selection == MENU_DIFF_SEL_MEDIUM ? MENU_SELECTED_COLOR : MENU_OPTION_COLOR) != 0) return 1;
-  if (renderer_draw_rectangle(MENU_BTN_X, DIFF_HARD_Y, MENU_BTN_W, MENU_BTN_H,
-        menu->diff_selection == MENU_DIFF_SEL_HARD ? MENU_SELECTED_COLOR : MENU_OPTION_COLOR) != 0) return 1;
-  if (renderer_draw_rectangle(MENU_BTN_X, DIFF_BACK_Y, MENU_BTN_W, MENU_BTN_H,
-        menu->diff_selection == MENU_DIFF_SEL_BACK ? MENU_SELECTED_COLOR : MENU_OPTION_COLOR) != 0) return 1;
-
+  if (sprite_draw_clipped(&menu->cursor, menu->cursor_x, menu->cursor_y) != 0) return 1;
   return renderer_present();
 }
 
@@ -289,12 +278,7 @@ int menu_state_render(const MenuState *menu) {
   if (menu == NULL) return 1;
 
   if (menu->screen == MENU_SCREEN_MAIN) {
-    return menu->assets_loaded
-      ? render_main_screen_sprites(menu)
-      : render_main_screen_fallback(menu);
-  } else {
-    return menu->assets_loaded
-      ? render_difficulty_screen_sprites(menu)
-      : render_difficulty_screen_fallback(menu);
+    return render_main_screen_sprites(menu);
   }
+  return render_difficulty_screen_sprites(menu);
 }

@@ -1,40 +1,80 @@
-#ifndef PROJECT_MODEL_PLAYER_H
-#define PROJECT_MODEL_PLAYER_H
+/**
+ * @file player.h
+ * @brief Player state and movement helpers.
+ *
+ * Player stores position, angle, health, hitbox size, color and cooldowns.
+ * Movement helpers keep position math in one place.
+ */
+#ifndef PLAYER_H
+#define PLAYER_H
 
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "config.h"
 #include "types.h"
 
-#define PLAYER_DEFAULT_HEALTH 3
-#define PLAYER_DEFAULT_WIDTH 22
-#define PLAYER_DEFAULT_HEIGHT 22
-#define PLAYER1_INITIAL_ANGLE 0.0f
-#define PLAYER2_INITIAL_ANGLE 3.1415926f
-#define PLAYER1_COLOR 0x00AAFF
-#define PLAYER2_COLOR 0xFF4040
-#define PLAYER_FULL_ROTATION 6.2831852f
-#define PLAYER_ROTATION_STEP 0.10f
-#define PLAYER_MOVE_SPEED 3.0f
+#define PLAYER_FULL_ROTATION   6.2831852f /**< Full rotation in radians (2*pi). */
 
+/**
+ * @brief Runtime state for one player.
+ */
 typedef struct {
-  Position position;
-  float angle;
-  int health;
-  bool alive;
-  uint16_t width;
-  uint16_t height;
-  uint32_t color;
+  Position position; /**< Current pixel-space center position. */
+  float    angle;    /**< Current facing angle in radians (0 = right). */
+  int      health;   /**< Remaining hit points. */
+  bool     alive;    /**< False once health reaches zero. */
+  uint16_t width;    /**< Hitbox width in pixels. */
+  uint16_t height;   /**< Hitbox height in pixels. */
+  uint32_t color;    /**< Player accent color for HUD rendering. */
+  uint32_t next_teleport_frame; /**< Earliest gameplay frame when teleporting is allowed. */
+  uint32_t next_shot_frame;     /**< Earliest frame when shooting is allowed. */
 } Player;
 
+/**
+ * @brief Initializes a player at the given spawn position.
+ */
 void player_init(Player *player, Position spawn, float angle, uint32_t color);
+
+/**
+ * @brief Returns true if the player is still alive.
+ */
 bool player_is_alive(const Player *player);
+
+/**
+ * @brief Marks the player as dead regardless of remaining health.
+ */
 void player_kill(Player *player);
+
+/**
+ * @brief Reduces the player's health by @p damage.
+ *
+ * The player is killed when health reaches zero.
+ */
 void player_damage(Player *player, int damage);
+
+/**
+ * @brief Restores up to @p amount hit points, clamped to PLAYER_DEFAULT_HEALTH.
+ */
 void player_heal(Player *player, int amount);
+
+/**
+ * @brief Teleports the player to an exact pixel position.
+ */
 void player_set_position(Player *player, Position position);
+
+/**
+ * @brief Advances the player's facing angle by @p delta_angle radians.
+ *
+ * Wraps the angle to [0, PLAYER_FULL_ROTATION).
+ */
 void player_rotate(Player *player, float delta_angle);
 
+/**
+ * @brief Computes the pixel position reached by moving @p distance pixels forward.
+ *
+ * Does not modify the player or check for collisions.
+ */
 Position player_get_forward_position(const Player *player, float distance);
 
 #endif

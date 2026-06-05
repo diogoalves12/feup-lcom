@@ -6,13 +6,7 @@
 void combat_init(CombatState *combat) {
   if (combat == NULL) return;
 
-  combat->player1_next_allowed_shot_frame = 0;
-  combat->player2_next_allowed_shot_frame = 0;
   combat->last_shot.active = false;
-}
-
-void combat_reset(CombatState *combat) {
-  combat_init(combat);
 }
 
 static bool point_inside_player(int px, int py, const Player *player) {
@@ -28,16 +22,14 @@ static bool point_inside_player(int px, int py, const Player *player) {
   return px >= hitbox_left && px <= hitbox_right && py >= hitbox_top && py <= hitbox_bottom;
 }
 
-bool combat_try_shoot(CombatState *combat, int shooter_num, const Player *shooter, Player *target, Arena *arena, uint32_t frame_counter) {
+bool combat_try_shoot(CombatState *combat, int shooter_num, Player *shooter, Player *target, Arena *arena, uint32_t frame_counter) {
   if (combat == NULL || shooter == NULL || target == NULL || arena == NULL) return false;
   if (shooter_num != 1 && shooter_num != 2) return false;
 
-  uint32_t *next_allowed = (shooter_num == 1) ? &combat->player1_next_allowed_shot_frame : &combat->player2_next_allowed_shot_frame;
-
-  if (frame_counter < *next_allowed) return false;
+  if (frame_counter < shooter->next_shot_frame) return false;
   if (!shooter->alive || !target->alive) return false;
 
-  *next_allowed = frame_counter + COMBAT_SHOT_COOLDOWN_TICKS;
+  shooter->next_shot_frame = frame_counter + COMBAT_SHOT_COOLDOWN_TICKS;
 
   float direction_x = cosf(shooter->angle);
   float direction_y = sinf(shooter->angle);

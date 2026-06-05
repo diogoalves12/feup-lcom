@@ -1,12 +1,31 @@
-#ifndef PROJECT_VIEW_ITEM_DRAW_H
-#define PROJECT_VIEW_ITEM_DRAW_H
+/**
+ * @file item_draw.h
+ * @brief Item sprite rendering.
+ *
+ * Health pickups use a four frame animation driven by the frame counter.
+ */
+#ifndef ITEM_DRAW_H
+#define ITEM_DRAW_H
 
 #include <stdint.h>
 
 #include "item.h"
 
-int  item_view_load_assets(void);
+/**
+ * @brief Loads item sprites.
+ */
+int item_view_load_assets(void);
+
+/**
+ * @brief Frees all item sprites.
+ */
 void item_view_destroy_assets(void);
-int  item_view_draw(const ItemManager *manager, uint32_t frame_counter);
+
+/**
+ * @brief Draws all active items in the ItemManager.
+ *
+ * Inactive items are skipped.
+ */
+int item_view_draw(const ItemManager *manager, uint32_t frame_counter);
 
 #endif

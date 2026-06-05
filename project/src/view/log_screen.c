@@ -16,10 +16,7 @@
 #define LOG_TEXT_COLOR     0xE0E0E0
 #define LOG_TITLE_COLOR    0xFFD000
 #define LOG_EMPTY_COLOR    0x808080
-#define LOG_OPTION_COLOR   0x404040
-#define LOG_SELECTED_COLOR 0xAA0000
 
-#define LOG_BTN_W 280
 #define LOG_BTN_H  90
 #define LOG_BACK_Y 480
 
@@ -32,12 +29,11 @@
 #define LOG_TITLE_SCALE 5
 
 static int log_back_btn_x(const LogScreenState *state) {
-  int w = (state != NULL && state->button.loaded) ? (int)state->button.width : LOG_BTN_W;
-  return (SCREEN_WIDTH - w) / 2;
+  return (SCREEN_WIDTH - (int)state->button.width) / 2;
 }
 
 static int log_back_btn_w(const LogScreenState *state) {
-  return (state != NULL && state->button.loaded) ? (int)state->button.width : LOG_BTN_W;
+  return (int)state->button.width;
 }
 
 void log_screen_init(LogScreenState *state) {
@@ -50,7 +46,6 @@ void log_screen_init(LogScreenState *state) {
   state->cursor_y = LOG_BACK_Y + LOG_BTN_H / 2;
   state->prev_lb = false;
   state->back_hover = false;
-  state->assets_loaded = false;
 }
 
 int log_screen_load_assets(LogScreenState *state) {
@@ -61,7 +56,6 @@ int log_screen_load_assets(LogScreenState *state) {
   if (sprite_load(&state->back_text, back) != 0) { log_screen_destroy_assets(state); return 1; }
   if (sprite_load(&state->cursor, pointer_b_shaded_xpm) != 0) { log_screen_destroy_assets(state); return 1; }
 
-  state->assets_loaded = true;
   return 0;
 }
 
@@ -71,7 +65,6 @@ void log_screen_destroy_assets(LogScreenState *state) {
   sprite_destroy(&state->button_selected);
   sprite_destroy(&state->back_text);
   sprite_destroy(&state->cursor);
-  state->assets_loaded = false;
 }
 
 void log_screen_reset(LogScreenState *state) {
@@ -161,29 +154,16 @@ static void format_entry(const MatchLogEntry *entry, char *buffer, size_t buffer
 
 static int draw_back_button(const LogScreenState *state) {
   bool selected = state->back_hover;
+  const Sprite *btn = selected ? &state->button_selected : &state->button;
+  uint16_t bx = (uint16_t)((SCREEN_WIDTH - (int)btn->width) / 2);
+  uint16_t by = (uint16_t)(LOG_BACK_Y + ((int)LOG_BTN_H - (int)btn->height) / 2);
+  if (sprite_draw(btn, bx, by) != 0) return 1;
 
-  if (state->assets_loaded) {
-    const Sprite *btn = selected ? &state->button_selected : &state->button;
-    uint16_t bx = (uint16_t)((SCREEN_WIDTH - (int)btn->width) / 2);
-    uint16_t by = (uint16_t)(LOG_BACK_Y + ((int)LOG_BTN_H - (int)btn->height) / 2);
-    if (sprite_draw(btn, bx, by) != 0) return 1;
-
-    if (state->back_text.loaded) {
-      int lx = ((int)SCREEN_WIDTH - (int)state->back_text.width) / 2;
-      int ly = (int)LOG_BACK_Y + ((int)LOG_BTN_H - (int)state->back_text.height) / 2;
-      if (lx < 0) lx = 0;
-      if (ly < 0) ly = 0;
-      if (sprite_draw(&state->back_text, (uint16_t)lx, (uint16_t)ly) != 0) return 1;
-    }
-  } else {
-    int bx = (SCREEN_WIDTH - LOG_BTN_W) / 2;
-    if (renderer_draw_rectangle((uint16_t)bx, LOG_BACK_Y, LOG_BTN_W, LOG_BTN_H,
-          selected ? LOG_SELECTED_COLOR : LOG_OPTION_COLOR) != 0) return 1;
-    int tw = text_string_width("BACK", 3);
-    int tx = bx + (LOG_BTN_W - tw) / 2;
-    int ty = LOG_BACK_Y + (LOG_BTN_H - TEXT_GLYPH_H * 3) / 2;
-    text_draw(tx, ty, "BACK", 3, LOG_TEXT_COLOR);
-  }
+  int lx = ((int)SCREEN_WIDTH - (int)state->back_text.width) / 2;
+  int ly = (int)LOG_BACK_Y + ((int)LOG_BTN_H - (int)state->back_text.height) / 2;
+  if (lx < 0) lx = 0;
+  if (ly < 0) ly = 0;
+  if (sprite_draw(&state->back_text, (uint16_t)lx, (uint16_t)ly) != 0) return 1;
   return 0;
 }
 
@@ -214,9 +194,7 @@ int log_screen_render(const LogScreenState *state, const MatchLog *log) {
 
   if (draw_back_button(state) != 0) return 1;
 
-  if (state->assets_loaded) {
-    sprite_draw_clipped(&state->cursor, state->cursor_x, state->cursor_y);
-  }
+  if (sprite_draw_clipped(&state->cursor, state->cursor_x, state->cursor_y) != 0) return 1;
 
   return renderer_present();
 }
