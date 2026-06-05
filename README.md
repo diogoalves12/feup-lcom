@@ -1,58 +1,63 @@
-# Template
-
-
+# LCOM Project - Dual Arena
 
 ## Getting started
 
-Welcome to your LCOM code repository. This is where your team should deliver all the required artifacts, including code.
-Please take your time to get acquainted with GitLab and its functionalities. The way your team uses Git and GitLab to collaborate will be evaluated. 
+Welcome to the **Dual Arena** repository. This project was developed as the final assignment for the LCOM course.
+It is a 1v1 local multiplayer top-down arena shooter built entirely from scratch in C for the MINIX 3 operating system, directly interfacing with the hardware peripherals.
 
 ## Boilerplate
 
-In this repository, you will find some pre-loaded files and an initial setup of your team's project board. 
-Along the semester, you will be adding files and folders to this repository.
-Make sure you expand on the issues and milestones for your project, helping your team to coordinate and meet all the deadlines. Major deadlines are already setup but you should add your own sub-issues, additional issues, and deadlines. 
+The project is structured following an **MVC (Model-View-Controller)** architecture to keep the code modular, maintainable, and clean:
+- `src/app/`: Game state machine and main loop orchestration.
+- `src/model/`: Game logic, physics, collision detection, and match history.
+- `src/view/`: Rendering engine (double buffering), sprite management, UI screens.
+- `src/controller/`: Device input mapping (Keyboard and Mouse) to game actions.
+- `src/devices/` & `lab*/`: Low-level device drivers interacting with the MINIX kernel.
 
-## GitLab Setup 
+## Building and Running
 
-### Add your files
+To compile and play the game, follow these instructions inside the MINIX environment.
 
-* [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
-
+### 1. Compile the project
+Navigate to the project directory and compile using `make`:
+```bash
+cd labs/project/
+make clean
+make
 ```
-cd existing_repo
-git remote add origin https://gitlab.up.pt/lcom-26/template.git
-git branch -M main
-git push -uf origin main
+
+### 2. Run the game
+Execute the compiled binary with the appropriate permissions:
+```bash
+lcom_run proj
 ```
 
-### Integrate with your tools
+### 3. Stop the game (in case of emergency)
+If you need to force-stop the execution from another terminal:
+```bash
+lcom_stop proj
+```
 
-* [Set up project integrations](https://gitlab.up.pt/lcom-26/template/-/settings/integrations)
+## Game Controls & Mechanics
 
-### Collaborate with your team
+**Dual Arena** uses a dynamic auto-rotation mechanic. Players automatically rotate in place. When a movement key is held, the rotation stops and the player moves forward in the direction they are currently facing.
 
-* [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+### Player 1 (Keyboard)
+* **Move Forward:** `W`
+* **Shoot:** `SPACE`
 
-### Test and Deploy
+### Player 2 (Mouse)
+* **Move Forward:** `Left Mouse Button`
+* **Shoot:** `Right Mouse Button`
 
-Use the built-in continuous integration in GitLab.
-
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
+### Menu & UI Navigation
+* **Navigate Menus:** `Up / Down Arrows` or `Mouse Movement`
+* **Select Option:** `ENTER` or `Left Mouse Button`
+* **Go Back / Exit:** `ESC`
+* **Pause Game:** `P`
 
 ## License
-For open source projects, say how it is licensed.
+This project is for educational purposes under the scope of the LCOM course at FEUP.
 
 ## Declaration of Responsible AI Use
 
@@ -67,14 +72,14 @@ We declare that:
 4. We have not used AI tools to generate complete solutions that we present as entirely our own unaided work, and we have avoided plagiarism, whether from AI outputs or other sources.  
 5. If asked, we will provide details of which tools we used, for which files or parts of the project, and how we verified and adapted their outputs.
 
-Signed: `Diogo Pérez`, `Diogo Alves`, `Gonçalo Paiva`
-Date: `21/04/2026`
+Signed: `Diogo Alves`, `Diogo Pérez`, `Gonçalo Paiva`
+Date: `05/06/2026`
 
 ## Authors and acknowledgment
 
 LCOM Project for group GRUPO_2LEIC07_4.
 Group members:
 
-Diogo Pérez (up202406763@up.pt)
 Diogo Alves (up202307104@up.pt)
+Diogo Pérez (up202406763@up.pt)
 Gonçalo Paiva (up202309927@up.pt)
