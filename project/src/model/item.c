@@ -6,9 +6,9 @@ static int abs_int(int v) {
   return v < 0 ? -v : v;
 }
 
-static void add_item(ItemManager *manager, ItemType type, int tile_row, int tile_col) {
-  if (manager->count >= MAX_ITEMS) return;
-  Item *it = &manager->items[manager->count++];
+static void add_item(ItemPool *pool, ItemType type, int tile_row, int tile_col) {
+  if (pool->count >= MAX_ITEMS) return;
+  Item *it = &pool->items[pool->count++];
   it->type = type;
   it->position.x = tile_col * TILE_SIZE + TILE_SIZE / 2;
   it->position.y = tile_row * TILE_SIZE + TILE_SIZE / 2;
@@ -16,24 +16,24 @@ static void add_item(ItemManager *manager, ItemType type, int tile_row, int tile
   it->respawn_frame = 0;
 }
 
-void item_manager_init(ItemManager *manager, ArenaDifficulty difficulty) {
-  if (manager == NULL) return;
-  manager->count = 0;
+void item_pool_init(ItemPool *pool, ArenaDifficulty difficulty) {
+  if (pool == NULL) return;
+  pool->count = 0;
 
   switch (difficulty) {
     case ARENA_EASY:
-      add_item(manager, ITEM_HEALTH, 15, 20);
+      add_item(pool, ITEM_HEALTH, 15, 20);
       break;
     case ARENA_HARD:
-      add_item(manager, ITEM_HEALTH, 5, 20);
-      add_item(manager, ITEM_HEALTH, 24, 20);
-      add_item(manager, ITEM_HEALTH, 15, 6);
-      add_item(manager, ITEM_HEALTH, 15, 33);
+      add_item(pool, ITEM_HEALTH, 5, 20);
+      add_item(pool, ITEM_HEALTH, 24, 20);
+      add_item(pool, ITEM_HEALTH, 15, 6);
+      add_item(pool, ITEM_HEALTH, 15, 33);
       break;
     case ARENA_MEDIUM:
     default:
-      add_item(manager, ITEM_HEALTH, 6, 20);
-      add_item(manager, ITEM_HEALTH, 23, 20);
+      add_item(pool, ITEM_HEALTH, 6, 20);
+      add_item(pool, ITEM_HEALTH, 23, 20);
       break;
   }
 }
@@ -61,11 +61,11 @@ static bool try_consume(Item *item, Player *player) {
   return false;
 }
 
-void item_manager_update(ItemManager *manager, Player *player1, Player *player2, uint32_t frame_counter) {
-  if (manager == NULL) return;
+void item_pool_update(ItemPool *pool, Player *player1, Player *player2, uint32_t frame_counter) {
+  if (pool == NULL) return;
 
-  for (int i = 0; i < manager->count; i++) {
-    Item *item = &manager->items[i];
+  for (int i = 0; i < pool->count; i++) {
+    Item *item = &pool->items[i];
 
     if (item->active) {
       bool taken = try_consume(item, player1);

@@ -7,13 +7,13 @@
 
 #define GLYPH_SPACING 1
 
-static const uint8_t font_unknown[TEXT_GLYPH_H] = {
+static const uint8_t font_unknown[CHAR_H] = {
   0x1F, 0x11, 0x11, 0x11, 0x11, 0x11, 0x1F
 };
 
 typedef struct {
   char    ch;
-  uint8_t rows[TEXT_GLYPH_H];
+  uint8_t rows[CHAR_H];
 } Glyph;
 
 static const Glyph font_table[] = {
@@ -72,7 +72,7 @@ static const uint8_t *glyph_for(char ch) {
 
 int text_char_width(uint8_t scale) {
   if (scale == 0) scale = 1;
-  return (TEXT_GLYPH_W + GLYPH_SPACING) * (int)scale;
+  return (CHAR_W + GLYPH_SPACING) * (int)scale;
 }
 
 int text_string_width(const char *str, uint8_t scale) {
@@ -81,14 +81,14 @@ int text_string_width(const char *str, uint8_t scale) {
   while (str[count] != '\0') count++;
   if (count == 0) return 0;
   if (scale == 0) scale = 1;
-  return count * TEXT_GLYPH_W * (int)scale + (count - 1) * GLYPH_SPACING * (int)scale;
+  return count * CHAR_W * (int)scale + (count - 1) * GLYPH_SPACING * (int)scale;
 }
 
 static void draw_glyph(int x, int y, const uint8_t *glyph, uint8_t scale, uint32_t color) {
-  for (int row = 0; row < TEXT_GLYPH_H; row++) {
+  for (int row = 0; row < CHAR_H; row++) {
     uint8_t bits = glyph[row];
-    for (int col = 0; col < TEXT_GLYPH_W; col++) {
-      if ((bits >> (TEXT_GLYPH_W - 1 - col)) & 0x1) {
+    for (int col = 0; col < CHAR_W; col++) {
+      if ((bits >> (CHAR_W - 1 - col)) & 0x1) {
         int px = x + col * (int)scale;
         int py = y + row * (int)scale;
         if (px < 0 || py < 0) continue;
@@ -103,7 +103,7 @@ void text_draw(int x, int y, const char *str, uint8_t scale, uint32_t color) {
   if (str == NULL) return;
   if (scale == 0) scale = 1;
 
-  int advance = (TEXT_GLYPH_W + GLYPH_SPACING) * (int)scale;
+  int advance = (CHAR_W + GLYPH_SPACING) * (int)scale;
   int cx = x;
   for (int i = 0; str[i] != '\0'; i++) {
     const uint8_t *glyph = glyph_for(str[i]);

@@ -1,6 +1,6 @@
 /**
  * @file types.h
- * @brief Small geometry types shared by the model.
+ * @brief Geometry types shared by the model.
  */
 #ifndef TYPES_H
 #define TYPES_H

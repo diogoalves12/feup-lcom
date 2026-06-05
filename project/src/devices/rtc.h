@@ -2,8 +2,8 @@
  * @file rtc.h
  * @brief RTC timestamp reading.
  *
- * Used to timestamp match log entries. Values are read from the CMOS RTC and
- * converted from BCD when needed.
+ * Used to timestamp match log entries.
+ * Values are read from the CMOS RTC and converted from BCD when needed.
  */
 #ifndef RTC_H
 #define RTC_H
@@ -19,11 +19,11 @@ typedef struct {
   uint8_t  hour;   /**< Hours (0-23). */
   uint8_t  day;    /**< Day of the month (1-31). */
   uint8_t  month;  /**< Month (1-12). */
-  uint16_t year;   /**< Full four-digit year. */
+  uint16_t year;   /**< Four digit year. */
 } RtcDateTime;
 
 /**
- * @brief Reads the current date and time from the CMOS RTC.
+ * @brief Reads the current date and time from the RTC.
  *
  * Waits until the RTC is not updating before reading the registers.
  */

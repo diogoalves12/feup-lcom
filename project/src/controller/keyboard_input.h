@@ -2,13 +2,13 @@
  * @file keyboard_input.h
  * @brief Converts raw keyboard scancodes into key state.
  *
- * Movement and shooting stay true while the key is held. Menu and pause
- * events are one frame flags and must be cleared after they are read.
+ * Movement and shooting stay true while the key is pressed. 
+ * Menu and pause events are one frame flags and must be cleared after they are read.
  *
  * Keyboard layout:
- *  - Player 1: W = move forward, Space = shoot
- *  - Menus: arrow up and arrow down = navigation, Enter = confirm
- *  - Shared: Escape = back or exit, P = pause
+ *  - Player 1: W to move forward, Space to shoot
+ *  - Menus: arrow up and arrow down to navigate, Enter to confirm
+ *  - System: Escape to go back or exit, P to pause the game
  */
 #ifndef KEYBOARD_INPUT_H
 #define KEYBOARD_INPUT_H
@@ -17,17 +17,17 @@
 #include <stdint.h>
 
 /**
- * @brief Current logical keyboard state.
+ * @brief Keyboard state.
  */
 typedef struct {
-  bool move_forward;  /**< True while the forward movement key is held. */
-  bool shoot;         /**< True while the shoot key is held. */
-  bool nav_up;        /**< True while the menu-navigate-up key is held. */
-  bool nav_down;      /**< True while the menu-navigate-down key is held. */
-  bool escape;        /**< One-shot: set on Escape key press. */
-  bool confirm;       /**< One-shot: set on confirm key press. */
-  bool pause_toggle;  /**< One-shot: set on pause key press. */
-  bool _extended;     /**< Internal: tracks the 0xE0 extended-key prefix. */
+  bool move_forward;  /**< True while the forward key is pressed. */
+  bool shoot;         /**< True while the shoot key is pressed. */
+  bool nav_up;        /**< True while the up key is pressed. */
+  bool nav_down;      /**< True while the down key is pressed. */
+  bool escape;        /**< Set if escape key is pressed. */
+  bool confirm;       /**< Set if confirm key is pressed. */
+  bool pause_toggle;  /**< Set if pause key is pressed. */
+  bool _extended;     /**< Tracks the 0xE0 extended key prefix. */
 } KeyboardInput;
 
 /**
@@ -43,8 +43,8 @@ void keyboard_input_init(KeyboardInput *input);
 void keyboard_input_update(KeyboardInput *input, uint8_t scancode);
 
 /**
- * @brief Clears one frame events after the game reads them.
+ * @brief Clears keyboard actions that should last only one frame.
  */
-void keyboard_input_clear_oneshots(KeyboardInput *input);
+void keyboard_input_clear_frame_actions(KeyboardInput *input);
 
 #endif

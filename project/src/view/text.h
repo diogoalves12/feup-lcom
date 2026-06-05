@@ -9,11 +9,11 @@
 
 #include <stdint.h>
 
-#define TEXT_GLYPH_W 5 /**< Character width in pixels at scale 1. */
-#define TEXT_GLYPH_H 7 /**< Character height in pixels at scale 1. */
+#define CHAR_W 5 /**< Character width in pixels at scale 1. */
+#define CHAR_H 7 /**< Character height in pixels at scale 1. */
 
 /**
- * @brief Returns the width of one glyph at @p scale.
+ * @brief Returns the width of one character at @p scale.
  */
 int text_char_width(uint8_t scale);
 
