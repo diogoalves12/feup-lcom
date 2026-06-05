@@ -13,13 +13,13 @@ OUTPUT_DIRECTORY       = docs/doxygen
 #---------------------------------------------------------------------------
 # Input
 #---------------------------------------------------------------------------
-INPUT                  = project/src
+INPUT                  = src
 FILE_PATTERNS          = *.c *.h
 RECURSIVE              = YES
 
-# Exclude lab libraries and generated/debug files
-EXCLUDE                = lab1 lab2 lab3 lab4 lab5
+EXCLUDE                =
 EXCLUDE_PATTERNS       = */debug/* *.o
+EXCLUDE_SYMBOLS        = Glyph font_table font_unknown
 
 #---------------------------------------------------------------------------
 # Build
