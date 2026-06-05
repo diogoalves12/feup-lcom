@@ -11,8 +11,7 @@
 
 typedef enum {
   GAME_OVER_SEL_RESTART = 0,
-  GAME_OVER_SEL_MENU,
-  GAME_OVER_SEL_EXIT
+  GAME_OVER_SEL_MENU
 } GameOverSelection;
 
 typedef struct {
@@ -25,7 +24,6 @@ typedef struct {
   Sprite            player2_wins_text;
   Sprite            retry_text;
   Sprite            back_text;
-  Sprite            exit_text;
   Sprite            cursor;
   int16_t           cursor_x;
   int16_t           cursor_y;

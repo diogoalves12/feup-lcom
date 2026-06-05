@@ -11,7 +11,7 @@
 #include "xpm/text/pause.xpm"
 #include "xpm/text/resume.xpm"
 #include "xpm/text/retry.xpm"
-#include "xpm/text/back.xpm"
+#include "xpm/text/main_menu.xpm"
 
 #define PAUSE_OPTION_COLOR   0x404040
 #define PAUSE_SELECTED_COLOR 0xAA0000
@@ -49,7 +49,7 @@ int pause_menu_state_load_assets(PauseMenuState *menu) {
   if (sprite_load(&menu->title, pause_title_xpm) != 0) { pause_menu_state_destroy_assets(menu); return 1; }
   if (sprite_load(&menu->resume_text, resume_xpm) != 0) { pause_menu_state_destroy_assets(menu); return 1; }
   if (sprite_load(&menu->retry_text, retry_xpm) != 0) { pause_menu_state_destroy_assets(menu); return 1; }
-  if (sprite_load(&menu->back_text, back) != 0) { pause_menu_state_destroy_assets(menu); return 1; }
+  if (sprite_load(&menu->back_text, main_menu) != 0) { pause_menu_state_destroy_assets(menu); return 1; }
   if (sprite_load(&menu->cursor, pointer_b_shaded_xpm) != 0) { pause_menu_state_destroy_assets(menu); return 1; }
 
   menu->assets_loaded = true;
