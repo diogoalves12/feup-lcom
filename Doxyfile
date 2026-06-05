@@ -1,0 +1,54 @@
+# Doxyfile for LCOM 1v1 Arena Game
+# Run: doxygen Doxyfile
+# Output: docs/doxygen/html/index.html
+
+#---------------------------------------------------------------------------
+# Project
+#---------------------------------------------------------------------------
+PROJECT_NAME           = "LCOM 1v1 Arena Game"
+PROJECT_NUMBER         =
+PROJECT_BRIEF          = "Real-time 1v1 arena shooter for MINIX 3 (LCOM)"
+OUTPUT_DIRECTORY       = docs/doxygen
+
+#---------------------------------------------------------------------------
+# Input
+#---------------------------------------------------------------------------
+INPUT                  = project/src
+FILE_PATTERNS          = *.c *.h
+RECURSIVE              = YES
+
+# Exclude lab libraries and generated/debug files
+EXCLUDE                = lab1 lab2 lab3 lab4 lab5
+EXCLUDE_PATTERNS       = */debug/* *.o
+
+#---------------------------------------------------------------------------
+# Build
+#---------------------------------------------------------------------------
+EXTRACT_ALL            = YES
+EXTRACT_STATIC         = YES
+EXTRACT_PRIVATE        = NO
+SHOW_INCLUDE_FILES     = YES
+JAVADOC_AUTOBRIEF      = NO
+QT_AUTOBRIEF           = NO
+MULTILINE_CPP_IS_BRIEF = NO
+
+#---------------------------------------------------------------------------
+# Source browsing
+#---------------------------------------------------------------------------
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = NO
+REFERENCED_BY_RELATION = YES
+REFERENCES_RELATION    = YES
+
+#---------------------------------------------------------------------------
+# Output formats
+#---------------------------------------------------------------------------
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+GENERATE_LATEX         = NO
+
+#---------------------------------------------------------------------------
+# Preprocessor
+#---------------------------------------------------------------------------
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = NO

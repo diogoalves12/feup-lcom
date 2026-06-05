@@ -1,39 +1,53 @@
-#ifndef PROJECT_MODEL_COMBAT_H
-#define PROJECT_MODEL_COMBAT_H
+/**
+ * @file combat.h
+ * @brief Shooting logic and bullet feedback.
+ *
+ * A shot is resolved by stepping a ray from the shooter in the facing
+ * direction. The ray stops on a wall, breakable wall, target hitbox or
+ * maximum distance. The last shot is stored so the view can draw feedback.
+ */
+#ifndef COMBAT_H
+#define COMBAT_H
 
 #include <stdbool.h>
 #include <stdint.h>
 
 #include "arena.h"
+#include "config.h"
 #include "player.h"
 
-#define COMBAT_DAMAGE 1
-#define COMBAT_RAY_STEP 4
-#define COMBAT_AIM_TOLERANCE 14
-#define COMBAT_MAX_DISTANCE 900
-#define COMBAT_SHOT_COOLDOWN_TICKS 20
-#define COMBAT_SHOT_EFFECT_FRAMES 8
-
+/**
+ * @brief Visual record of the most recent shot.
+ */
 typedef struct {
-  bool     active;
-  Position start;
-  Position end;
-  float    angle;
-  int      shooter_num;
-  bool     hit;
-  uint32_t start_frame;
-  uint32_t expire_frame;
+  bool     active;       /**< True while the shot effect should be rendered. */
+  Position start;        /**< Ray origin in pixel space. */
+  Position end;          /**< Ray terminus (hit point or max-range position). */
+  float    angle;        /**< Facing angle at the time of the shot (radians). */
+  int      shooter_num;  /**< 1 for Player 1, 2 for Player 2. */
+  bool     hit;          /**< True if the ray hit the target player. */
+  uint32_t start_frame;  /**< Frame counter when the shot was fired. */
+  uint32_t expire_frame; /**< Frame counter when the effect should be cleared. */
 } ShotEffect;
 
+/**
+ * @brief Per-match combat visual state.
+ */
 typedef struct {
-  uint32_t  player1_next_allowed_shot_frame;
-  uint32_t  player2_next_allowed_shot_frame;
-  ShotEffect last_shot;
+  ShotEffect last_shot; /**< Most recent shot effect for rendering. */
 } CombatState;
 
+/**
+ * @brief Clears the active shot effect.
+ */
 void combat_init(CombatState *combat);
-void combat_reset(CombatState *combat);
 
-bool combat_try_shoot(CombatState *combat, int shooter_num, const Player *shooter, Player *target, Arena *arena, uint32_t frame_counter);
+/**
+ * @brief Attempts to fire a shot from @p shooter toward @p target.
+ *
+ * The shooter cooldown is checked and updated here. A hit damages the target.
+ * A breakable wall hit damages the wall and stops the ray.
+ */
+bool combat_try_shoot(CombatState *combat, int shooter_num, Player *shooter, Player *target, Arena *arena, uint32_t frame_counter);
 
 #endif

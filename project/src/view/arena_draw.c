@@ -24,11 +24,8 @@
 #define BREAKABLE_SHADOW        0x5A3A1B
 
 #define TELEPORTER_FRAME_COUNT 4
-#define TELEPORTER_FALLBACK_A_COLOR 0x4080FF
-#define TELEPORTER_FALLBACK_B_COLOR 0xFF80C0
 
 static Sprite teleporter_frames[TELEPORTER_FRAME_COUNT];
-static bool   teleporter_assets_loaded = false;
 
 static Position tile_origin(int row, int col) {
   Position position;
@@ -82,20 +79,13 @@ static int draw_breakable_wall(int row, int col, uint8_t hp) {
   return 0;
 }
 
-static int draw_teleporter(int row, int col, TileType type, uint32_t frame_counter) {
+static int draw_teleporter(int row, int col, uint32_t frame_counter) {
   const Position o = tile_origin(row, col);
   uint16_t x = (uint16_t)o.x;
   uint16_t y = (uint16_t)o.y;
+  uint32_t frame_index = (frame_counter / 6) % TELEPORTER_FRAME_COUNT;
 
-  if (teleporter_assets_loaded) {
-    uint32_t frame_index = (frame_counter / 6) % TELEPORTER_FRAME_COUNT;
-    return sprite_draw(&teleporter_frames[frame_index], x, y);
-  }
-
-  uint32_t color = (type == TILE_TELEPORTER_A) ? TELEPORTER_FALLBACK_A_COLOR : TELEPORTER_FALLBACK_B_COLOR;
-  if (renderer_draw_rectangle((uint16_t)(x + 4), (uint16_t)(y + 4),
-                              TILE_SIZE - 8, TILE_SIZE - 8, color) != 0) return 1;
-  return 0;
+  return sprite_draw(&teleporter_frames[frame_index], x, y);
 }
 
 int arena_view_load_assets(void) {
@@ -108,7 +98,6 @@ int arena_view_load_assets(void) {
   if (sprite_load(&teleporter_frames[2], teleporter_2_xpm) != 0) goto fail;
   if (sprite_load(&teleporter_frames[3], teleporter_3_xpm) != 0) goto fail;
 
-  teleporter_assets_loaded = true;
   return 0;
 
 fail:
@@ -120,7 +109,6 @@ void arena_view_destroy_assets(void) {
   for (int i = 0; i < TELEPORTER_FRAME_COUNT; i++) {
     sprite_destroy(&teleporter_frames[i]);
   }
-  teleporter_assets_loaded = false;
 }
 
 int arena_view_draw(const Arena *arena, uint32_t frame_counter) {
@@ -135,7 +123,7 @@ int arena_view_draw(const Arena *arena, uint32_t frame_counter) {
       } else if (type == TILE_BREAKABLE_WALL) {
         if (draw_breakable_wall(row, col, arena->tiles[row][col].hp) != 0) return 1;
       } else if (type == TILE_TELEPORTER_A || type == TILE_TELEPORTER_B) {
-        if (draw_teleporter(row, col, type, frame_counter) != 0) return 1;
+        if (draw_teleporter(row, col, frame_counter) != 0) return 1;
       }
     }
   }
