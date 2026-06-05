@@ -12,8 +12,7 @@
 #include "xpm/text/player1_wins.xpm"
 #include "xpm/text/player2_wins.xpm"
 #include "xpm/text/retry.xpm"
-#include "xpm/text/back.xpm"
-#include "xpm/text/exit.xpm"
+#include "xpm/text/main_menu.xpm"
 
 #define GAME_OVER_BG_COLOR       0x101010
 #define GAME_OVER_OPTION_COLOR   0x404040
@@ -24,10 +23,9 @@
 #define GAME_OVER_BTN_X   ((SCREEN_WIDTH - GAME_OVER_BTN_W) / 2)
 
 #define GAME_OVER_TITLE_Y    30
-#define GAME_OVER_WINNER_Y  130
-#define GAME_OVER_RETRY_Y   240
-#define GAME_OVER_BACK_Y    350
-#define GAME_OVER_EXIT_Y    460
+#define GAME_OVER_WINNER_Y  150
+#define GAME_OVER_RETRY_Y   290
+#define GAME_OVER_BACK_Y    400
 
 void game_over_state_init(GameOverState *state, int winner) {
   if (state == NULL) return;
@@ -40,7 +38,6 @@ void game_over_state_init(GameOverState *state, int winner) {
   sprite_init(&state->player2_wins_text);
   sprite_init(&state->retry_text);
   sprite_init(&state->back_text);
-  sprite_init(&state->exit_text);
   sprite_init(&state->cursor);
   state->cursor_x = SCREEN_WIDTH / 2;
   state->cursor_y = SCREEN_HEIGHT / 2;
@@ -57,8 +54,7 @@ int game_over_state_load_assets(GameOverState *state) {
   if (sprite_load(&state->player1_wins_text, player1_wins_xpm) != 0) { game_over_state_destroy_assets(state); return 1; }
   if (sprite_load(&state->player2_wins_text, player2_wins_xpm) != 0) { game_over_state_destroy_assets(state); return 1; }
   if (sprite_load(&state->retry_text, retry_xpm) != 0) { game_over_state_destroy_assets(state); return 1; }
-  if (sprite_load(&state->back_text, back) != 0) { game_over_state_destroy_assets(state); return 1; }
-  if (sprite_load(&state->exit_text, exit_label_xpm) != 0) { game_over_state_destroy_assets(state); return 1; }
+  if (sprite_load(&state->back_text, main_menu) != 0) { game_over_state_destroy_assets(state); return 1; }
   if (sprite_load(&state->cursor, pointer_b_shaded_xpm) != 0) { game_over_state_destroy_assets(state); return 1; }
 
   state->assets_loaded = true;
@@ -74,7 +70,6 @@ void game_over_state_destroy_assets(GameOverState *state) {
   sprite_destroy(&state->player2_wins_text);
   sprite_destroy(&state->retry_text);
   sprite_destroy(&state->back_text);
-  sprite_destroy(&state->exit_text);
   sprite_destroy(&state->cursor);
   state->assets_loaded = false;
 }
@@ -87,7 +82,6 @@ static void game_over_update_hover(GameOverState *state) {
 
   if (cy >= GAME_OVER_RETRY_Y && cy < GAME_OVER_RETRY_Y + GAME_OVER_BTN_H) state->selection = GAME_OVER_SEL_RESTART;
   else if (cy >= GAME_OVER_BACK_Y && cy < GAME_OVER_BACK_Y + GAME_OVER_BTN_H) state->selection = GAME_OVER_SEL_MENU;
-  else if (cy >= GAME_OVER_EXIT_Y && cy < GAME_OVER_EXIT_Y + GAME_OVER_BTN_H) state->selection = GAME_OVER_SEL_EXIT;
 }
 
 void game_over_state_move_cursor(GameOverState *state, int16_t dx, int16_t dy) {
@@ -127,7 +121,7 @@ void game_over_state_update(GameOverState *state, const GameInputActions *action
   if (actions->nav_up && state->selection > GAME_OVER_SEL_RESTART) {
     state->selection = (GameOverSelection)(state->selection - 1);
   }
-  if (actions->nav_down && state->selection < GAME_OVER_SEL_EXIT) {
+  if (actions->nav_down && state->selection < GAME_OVER_SEL_MENU) {
     state->selection = (GameOverSelection)(state->selection + 1);
   }
 
@@ -135,10 +129,9 @@ void game_over_state_update(GameOverState *state, const GameInputActions *action
     switch (state->selection) {
       case GAME_OVER_SEL_RESTART: *next = GAME_STATE_PLAYING; break;
       case GAME_OVER_SEL_MENU: *next = GAME_STATE_MENU; break;
-      case GAME_OVER_SEL_EXIT: *next = GAME_STATE_EXIT; break;
     }
   } else if (actions->back) {
-    *next = GAME_STATE_EXIT;
+    *next = GAME_STATE_MENU;
   }
 }
 
@@ -181,8 +174,6 @@ static int render_sprites(const GameOverState *state) {
                             &state->retry_text, GAME_OVER_RETRY_Y) != 0) return 1;
   if (draw_game_over_button(state, state->selection == GAME_OVER_SEL_MENU,
                             &state->back_text, GAME_OVER_BACK_Y) != 0) return 1;
-  if (draw_game_over_button(state, state->selection == GAME_OVER_SEL_EXIT,
-                            &state->exit_text, GAME_OVER_EXIT_Y) != 0) return 1;
 
   sprite_draw_clipped(&state->cursor, state->cursor_x, state->cursor_y);
   return renderer_present();
@@ -197,8 +188,6 @@ static int render_fallback(const GameOverState *state) {
         state->selection == GAME_OVER_SEL_RESTART ? GAME_OVER_SELECTED_COLOR : GAME_OVER_OPTION_COLOR) != 0) return 1;
   if (renderer_draw_rectangle((uint16_t)bx, GAME_OVER_BACK_Y, GAME_OVER_BTN_W, GAME_OVER_BTN_H,
         state->selection == GAME_OVER_SEL_MENU ? GAME_OVER_SELECTED_COLOR : GAME_OVER_OPTION_COLOR) != 0) return 1;
-  if (renderer_draw_rectangle((uint16_t)bx, GAME_OVER_EXIT_Y, GAME_OVER_BTN_W, GAME_OVER_BTN_H,
-        state->selection == GAME_OVER_SEL_EXIT ? GAME_OVER_SELECTED_COLOR : GAME_OVER_OPTION_COLOR) != 0) return 1;
 
   sprite_draw_clipped(&state->cursor, state->cursor_x, state->cursor_y);
   return renderer_present();

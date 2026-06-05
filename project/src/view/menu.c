@@ -34,10 +34,16 @@
 #define DIFF_HARD_Y    345
 #define DIFF_BACK_Y    450
 
-void menu_state_init(MenuState *menu) {
-  if (menu == NULL) return;
+static void menu_state_select_main_start(MenuState *menu) {
   menu->screen = MENU_SCREEN_MAIN;
   menu->selection = MENU_SEL_START;
+  menu->cursor_x = SCREEN_WIDTH / 2;
+  menu->cursor_y = MENU_START_Y + MENU_BTN_H / 2;
+}
+
+void menu_state_init(MenuState *menu) {
+  if (menu == NULL) return;
+  menu_state_select_main_start(menu);
   menu->diff_selection = MENU_DIFF_SEL_MEDIUM;
   menu->selected_difficulty = DEFAULT_ARENA_DIFFICULTY;
   sprite_init(&menu->button);
@@ -51,8 +57,6 @@ void menu_state_init(MenuState *menu) {
   sprite_init(&menu->hard_text);
   sprite_init(&menu->back_text);
   sprite_init(&menu->cursor);
-  menu->cursor_x = SCREEN_WIDTH / 2;
-  menu->cursor_y = SCREEN_HEIGHT / 2;
   menu->prev_lb = false;
   menu->assets_loaded = false;
 }
@@ -94,8 +98,7 @@ void menu_state_destroy_assets(MenuState *menu) {
 
 void menu_state_reset(MenuState *menu) {
   if (menu == NULL) return;
-  menu->screen = MENU_SCREEN_MAIN;
-  menu->selection = MENU_SEL_START;
+  menu_state_select_main_start(menu);
   menu->diff_selection = (MenuDiffSelection)menu->selected_difficulty;
   menu->prev_lb = false;
 }
@@ -177,22 +180,22 @@ void menu_state_update(MenuState *menu, const GameInputActions *actions, GameSta
       switch (menu->diff_selection) {
         case MENU_DIFF_SEL_EASY:
           menu->selected_difficulty = ARENA_EASY;
-          menu->screen = MENU_SCREEN_MAIN;
+          menu_state_select_main_start(menu);
           break;
         case MENU_DIFF_SEL_MEDIUM:
           menu->selected_difficulty = ARENA_MEDIUM;
-          menu->screen = MENU_SCREEN_MAIN;
+          menu_state_select_main_start(menu);
           break;
         case MENU_DIFF_SEL_HARD:
           menu->selected_difficulty = ARENA_HARD;
-          menu->screen = MENU_SCREEN_MAIN;
+          menu_state_select_main_start(menu);
           break;
         case MENU_DIFF_SEL_BACK:
-          menu->screen = MENU_SCREEN_MAIN;
+          menu_state_select_main_start(menu);
           break;
       }
     } else if (actions->back) {
-      menu->screen = MENU_SCREEN_MAIN;
+      menu_state_select_main_start(menu);
     }
   }
 }

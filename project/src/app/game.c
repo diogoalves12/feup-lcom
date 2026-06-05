@@ -220,6 +220,7 @@ static void game_apply_transition(Game *game, GameState next) {
       break;
     case GAME_STATE_MENU:
       menu_state_reset(&game->menu);
+      game->menu.prev_lb = game->mouse.move_forward;
       break;
     case GAME_STATE_GAME_OVER:
       game->game_over.selection = GAME_OVER_SEL_RESTART;
