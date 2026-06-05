@@ -326,6 +326,13 @@ static int game_unsubscribe_devices(void) {
   return result;
 }
 
+static void keyboard_slow_typematic(void) {
+  sys_outb(0x60, 0xF3);
+  tickdelay(micros_to_ticks(20000));
+  sys_outb(0x60, 0x7F);
+  tickdelay(micros_to_ticks(20000));
+}
+
 static int game_enable_mouse(void) {
   if (mouse_set_sample_rate(40) != 0) {
     printf("Failed to set mouse sample rate.\n");
@@ -335,6 +342,7 @@ static int game_enable_mouse(void) {
     printf("Failed to enable mouse data reporting.\n");
     return 1;
   }
+  keyboard_slow_typematic();
   return 0;
 }
 
@@ -377,27 +385,13 @@ static void game_handle_mouse_playing_interrupt(Game *game) {
   uint8_t byte;
   int status;
   struct packet pkt;
-  bool got_packet = false;
-  bool last_lb = game->mouse.move_forward;
-  bool last_rb = game->mouse.shoot;
-
   while ((status = mouse_read_pending_byte(&byte)) > 0) {
     if (mouse_sync_byte(byte, game->mouse_packet, &game->mouse_packet_idx)) {
       mouse_parse_packet_bytes(game->mouse_packet, &pkt);
-      last_lb = pkt.lb;
-      last_rb = pkt.rb;
-      got_packet = true;
+      mouse_input_set(&game->mouse, pkt.lb, pkt.rb, false);
     }
   }
-
-  if (status < 0) {
-    game->mouse_packet_idx = 0;
-    return;
-  }
-
-  if (got_packet) {
-    mouse_input_set(&game->mouse, last_lb, last_rb);
-  }
+  if (status < 0) game->mouse_packet_idx = 0;
 }
 
 static void game_process_mouse_byte(Game *game, uint8_t byte) {
