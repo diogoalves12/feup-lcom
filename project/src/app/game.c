@@ -68,6 +68,7 @@ static int  game_disable_mouse(void);
 static void game_handle_timer_interrupt(Game *game);
 static void game_handle_keyboard_interrupt(Game *game);
 static void game_handle_mouse_interrupt(Game *game);
+static void game_handle_mouse_playing_interrupt(Game *game);
 static void game_process_mouse_byte(Game *game, uint8_t byte);
 
 static void game_start_match(Game *game);
@@ -315,6 +316,10 @@ static int game_unsubscribe_devices(void) {
 }
 
 static int game_enable_mouse(void) {
+  if (mouse_set_sample_rate(40) != 0) {
+    printf("Failed to set mouse sample rate.\n");
+    return 1;
+  }
   if (mouse_enable_data_reporting_custom() != 0) {
     printf("Failed to enable mouse data reporting.\n");
     return 1;
@@ -344,12 +349,44 @@ static void game_handle_keyboard_interrupt(Game *game) {
 }
 
 static void game_handle_mouse_interrupt(Game *game) {
+  if (game->state == GAME_STATE_PLAYING) {
+    game_handle_mouse_playing_interrupt(game);
+    return;
+  }
+
   uint8_t byte;
   int status;
   while ((status = mouse_read_pending_byte(&byte)) > 0) {
     game_process_mouse_byte(game, byte);
   }
   if (status < 0) game->mouse_packet_idx = 0;
+}
+
+static void game_handle_mouse_playing_interrupt(Game *game) {
+  uint8_t byte;
+  int status;
+  struct packet pkt;
+  bool got_packet = false;
+  bool last_lb = game->mouse.move_forward;
+  bool last_rb = game->mouse.shoot;
+
+  while ((status = mouse_read_pending_byte(&byte)) > 0) {
+    if (mouse_sync_byte(byte, game->mouse_packet, &game->mouse_packet_idx)) {
+      mouse_parse_packet_bytes(game->mouse_packet, &pkt);
+      last_lb = pkt.lb;
+      last_rb = pkt.rb;
+      got_packet = true;
+    }
+  }
+
+  if (status < 0) {
+    game->mouse_packet_idx = 0;
+    return;
+  }
+
+  if (got_packet) {
+    mouse_input_set(&game->mouse, last_lb, last_rb, false);
+  }
 }
 
 static void game_process_mouse_byte(Game *game, uint8_t byte) {
@@ -404,14 +441,14 @@ static int game_loop(Game *game) {
     if (!is_ipc_notify(ipc_status)) continue;
     if (_ENDPOINT_P(msg.m_source) != HARDWARE) continue;
 
+    if (msg.m_notify.interrupts & BIT(timer_bit_no))
+      game_handle_timer_interrupt(game);
+
     if (msg.m_notify.interrupts & BIT(keyboard_bit_no))
       game_handle_keyboard_interrupt(game);
 
     if (msg.m_notify.interrupts & BIT(mouse_bit_no))
       game_handle_mouse_interrupt(game);
-
-    if (msg.m_notify.interrupts & BIT(timer_bit_no))
-      game_handle_timer_interrupt(game);
   }
 
   if (game_disable_mouse() != 0) result = 1;

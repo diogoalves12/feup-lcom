@@ -25,6 +25,7 @@
 /* Mouse commands */
 #define ENABLE_DATA_REPORTING  0xF4
 #define DISABLE_DATA_REPORTING 0xF5
+#define SET_SAMPLE_RATE        0xF3
 
 /* Mouse replies */
 #define MOUSE_ACK   0xFA

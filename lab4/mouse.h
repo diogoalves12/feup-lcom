@@ -16,6 +16,7 @@ int (mouse_read_pending_byte)(uint8_t *byte);
 int (mouse_write_command)(uint8_t command);
 int (mouse_enable_data_reporting_custom)();
 int (mouse_disable_data_reporting)();
+int (mouse_set_sample_rate)(uint8_t rate);
 
 bool (mouse_sync_byte)(uint8_t byte, uint8_t packet[3], uint8_t *index);
 void (mouse_parse_packet_bytes)(const uint8_t bytes[3], struct packet *pp);

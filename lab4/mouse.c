@@ -153,6 +153,12 @@ int (mouse_disable_data_reporting)() {
   return mouse_write_command(DISABLE_DATA_REPORTING);
 }
 
+int (mouse_set_sample_rate)(uint8_t rate) {
+  if (mouse_write_command(SET_SAMPLE_RATE) != 0) return -1;
+  if (mouse_write_command(rate) != 0) return -1;
+  return 0;
+}
+
 bool (mouse_sync_byte)(uint8_t byte, uint8_t packet[3], uint8_t *index) {
   if (packet == NULL || index == NULL) return false;
 
